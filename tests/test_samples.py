@@ -1,6 +1,7 @@
 import os
 import re
 
+import pytest
 from mypy import build
 from mypy import options
 from mypy.errors import CompileError
@@ -12,9 +13,16 @@ SAMPLES_DIR = os.path.join(HERE, "samples")
 OUTPUT_RE = re.compile(r"<output>(.*)</output>", re.MULTILINE | re.DOTALL)
 
 
-def test_samples(samplefile):
+@pytest.fixture(scope="session")
+def mypy_cache_dir(tmp_path_factory):
+    tdir = tmp_path_factory.mktemp('.mypy_cahe')
+    print("Setup cache", str(tdir))
+    return str(tdir)
+
+
+def test_samples(samplefile, mypy_cache_dir):
     opts = options.Options()
-    opts.incremental = False
+    opts.cache_dir = mypy_cache_dir
     opts.show_traceback = True
     opts.mypy_path = ['stubs']
     opts.plugins = ['mypy_zope:plugin']
