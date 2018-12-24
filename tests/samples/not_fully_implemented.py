@@ -3,7 +3,6 @@
 import zope.interface
 
 
-
 class ISomething(zope.interface.Interface):
     def hello(x: int, y: str) -> None:
         pass
@@ -16,7 +15,6 @@ class Something(object):
 
 def run(smth: ISomething):
     smth.hello(1, "test")
-    pass
 
 
 def main() -> None:
@@ -29,6 +27,6 @@ if __name__ == '__main__':
 
 """
 <output>
-not_fully_implemented.py:23: error: Cannot instantiate abstract class 'Something' with abstract attribute 'hello'
+not_fully_implemented.py:21: error: Cannot instantiate abstract class 'Something' with abstract attribute 'hello'
 </output>
 """

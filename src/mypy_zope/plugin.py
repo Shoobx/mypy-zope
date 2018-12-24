@@ -90,49 +90,39 @@ class ZopeInterfacePlugin(Plugin):
     def get_base_class_hook(self, fullname: str
                             ) -> Optional[Callable[[ClassDefContext], None]]:
         # print(f"get_base_class_hook: {fullname}")
-        def analyze(classdef_ctx: ClassDefContext) -> None:
+        def analyze_direct(classdef_ctx: ClassDefContext) -> None:
             print(f"*** Found zope interface: {classdef_ctx.cls.fullname}")
             md = self._get_metadata(classdef_ctx.cls.info)
             md['is_interface'] = True
-            classdef_ctx.cls.info.is_abstract = True
-            for name, node in classdef_ctx.cls.info.names.items():
-                if not isinstance(node.node, FuncDef):
-                    continue
-                selftype = Instance(classdef_ctx.cls.info, [],
-                                    line=classdef_ctx.cls.line,
-                                    column=classdef_ctx.cls.column)
-                selfarg = Argument(Var('self', None), selftype, None, ARG_POS)
+            self._process_zope_interface(classdef_ctx.cls.info)
 
-                func = node.node
-                func.is_abstract = True
-                func.is_decorated = True
-                func.arg_names.insert(0, 'self')
-                func.arg_kinds.insert(0, ARG_POS)
-                func.arguments.insert(0, selfarg)
+        def analyze_subinterface(classdef_ctx: ClassDefContext) -> None:
+            # If one of the bases is an interface, this is also an interface
+            if not isinstance(classdef_ctx.reason, NameExpr):
+                return
+            cls_info = classdef_ctx.cls.info
+            cls_md = self._get_metadata(cls_info)
+            api = classdef_ctx.api
+            base_name = classdef_ctx.reason.fullname
+            if not base_name:
+                return
+            base_node = api.lookup_fully_qualified_or_none(base_name)
+            if not base_node:
+                return
 
-                if isinstance(func.type, CallableType):
-                    func.type.arg_names.insert(0, 'self')
-                    func.type.arg_kinds.insert(0, ARG_POS)
-                    func.type.arg_types.insert(0, selftype)
-
-                # func.is_static = True
-                var = Var(name, func.type)
-                var.is_initialized_in_class=True
-                # var.is_staticmethod = True
-                var.info = func.info
-                var.set_line(func.line)
-                node.node = Decorator(func, [], var)
-
-            # cls.info.names['hello'].node.is_abstract=True
+            base_info = cast(TypeInfo, base_node.node)
+            base_md = self._get_metadata(base_info)
+            if base_md.get('is_interface'):
+                print(f"*** Found zope subinterface: {cls_info.fullname()}")
+                cls_md['is_interface'] = True
+                self._process_zope_interface(cls_info)
 
         if fullname == 'zope.interface.Interface':
-            return analyze
-        return None
+            return analyze_direct
 
-    def _get_metadata(self, typeinfo: TypeInfo) -> Dict[str, Any]:
-        if 'zope' not in typeinfo.metadata:
-            typeinfo.metadata['zope'] = {}
-        return typeinfo.metadata['zope']
+        # if fullname == 'interface_inheritance.ISomething':
+        return analyze_subinterface
+        # return None
 
     def get_customize_class_mro_hook(self, fullname: str
                                      ) -> Optional[Callable[[ClassDefContext], None]]:
@@ -147,7 +137,7 @@ class ZopeInterfacePlugin(Plugin):
             # iface_type = api.expr_to_analyzed_type(iface_expr)
             stn = classdef_ctx.api.lookup_fully_qualified(iface_expr)
             print(f"*** Adding {iface_expr} to MRO of {info.fullname()}")
-            info.mro.append(cast(TypeInfo, stn.node))
+            info.mro.extend(cast(TypeInfo, stn.node).mro)
 
             # XXX: Reuse abstract status checker from SemanticAnalyzerPass2.
             # Ideally, implement a dedicated interface verifier.
@@ -155,6 +145,43 @@ class ZopeInterfacePlugin(Plugin):
             api.calculate_abstract_status(info)
 
         return analyze
+
+    def _get_metadata(self, typeinfo: TypeInfo) -> Dict[str, Any]:
+        if 'zope' not in typeinfo.metadata:
+            typeinfo.metadata['zope'] = {}
+        return typeinfo.metadata['zope']
+
+    def _process_zope_interface(self, type_info: TypeInfo) -> None:
+        type_info.is_abstract = True
+        for name, node in type_info.names.items():
+            if not isinstance(node.node, FuncDef):
+                continue
+            selftype = Instance(type_info, [],
+                                line=type_info.line,
+                                column=type_info.column)
+            selfarg = Argument(Var('self', None), selftype, None, ARG_POS)
+
+            func = node.node
+            func.is_abstract = True
+            func.is_decorated = True
+            func.arg_names.insert(0, 'self')
+            func.arg_kinds.insert(0, ARG_POS)
+            func.arguments.insert(0, selfarg)
+
+            if isinstance(func.type, CallableType):
+                func.type.arg_names.insert(0, 'self')
+                func.type.arg_kinds.insert(0, ARG_POS)
+                func.type.arg_types.insert(0, selftype)
+
+            # func.is_static = True
+            var = Var(name, func.type)
+            var.is_initialized_in_class=True
+            # var.is_staticmethod = True
+            var.info = func.info
+            var.set_line(func.line)
+            node.node = Decorator(func, [], var)
+
+        pass
 
 def plugin(version: str) -> PyType[Plugin]:
     return ZopeInterfacePlugin

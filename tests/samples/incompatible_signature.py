@@ -13,12 +13,10 @@ class ISomething(zope.interface.Interface):
 class Something(object):
     def hello(self, x: int, y: int) -> None:
         print(f"X: {x}, Y: {y}")
-        pass
 
 
 def run(smth: ISomething):
     smth.hello(1, "test")
-    pass
 
 
 def main() -> None:
