@@ -17,7 +17,7 @@ def test_samples(samplefile):
     opts.incremental = False
     opts.show_traceback = True
     opts.mypy_path = ['stubs']
-    opts.plugins = ['mypy-zope:plugin']
+    opts.plugins = ['mypy_zope:plugin']
     # Config file is needed to load plugins, it doesn't not exist and is not
     # supposed to.
     opts.config_file = '    not_existing_config.ini'
