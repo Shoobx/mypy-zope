@@ -1,7 +1,10 @@
 ve
 .mypy_cache
+.pytest_cache
 __pycache__
 *.egg-info
 tags
+.tags
 *.sublime*
 *.swp
+tmp

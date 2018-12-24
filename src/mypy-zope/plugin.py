@@ -12,17 +12,17 @@ from typing import Callable, Optional
 class ZopeInterfacePlugin(Plugin):
     def get_type_analyze_hook(self, fullname: str
                               ) -> Optional[Callable[[AnalyzeTypeContext], Type]]:
-        print(f"get_type_analyze_hook: {fullname}")
+        # print(f"get_type_analyze_hook: {fullname}")
         return None
 
     def get_function_hook(self, fullname: str
                           ) -> Optional[Callable[[FunctionContext], Type]]:
-        print(f"get_function_hook: {fullname}")
+        # print(f"get_function_hook: {fullname}")
         return None
 
     def get_method_signature_hook(self, fullname: str
                                   ) -> Optional[Callable[[MethodSigContext], CallableType]]:
-        print(f"get_method_signature_hook: {fullname}")
+        # print(f"get_method_signature_hook: {fullname}")
         # def analyze(methodSigContext):
         #     # import ipdb; ipdb.set_trace()
         #     sig = methodSigContext.default_signature
@@ -37,7 +37,7 @@ class ZopeInterfacePlugin(Plugin):
 
     def get_method_hook(self, fullname: str
                         ) -> Optional[Callable[[MethodContext], Type]]:
-        print(f"get_method_hook: {fullname}")
+        # print(f"get_method_hook: {fullname}")
 
         # def analyze(methodContext):
         #     import ipdb; ipdb.set_trace()
@@ -54,12 +54,12 @@ class ZopeInterfacePlugin(Plugin):
 
     def get_attribute_hook(self, fullname: str
                            ) -> Optional[Callable[[AttributeContext], Type]]:
-        print(f"get_attribute_hook: {fullname}")
+        # print(f"get_attribute_hook: {fullname}")
         return None
 
     def get_class_decorator_hook(self, fullname: str
                                  ) -> Optional[Callable[[ClassDefContext], None]]:
-        print(f"get_class_decorator_hook: {fullname}")
+        # print(f"get_class_decorator_hook: {fullname}")
         def analyze(classDefContext):
             api = classDefContext.api
             decor = classDefContext.reason
@@ -82,12 +82,12 @@ class ZopeInterfacePlugin(Plugin):
 
     def get_metaclass_hook(self, fullname: str
                            ) -> Optional[Callable[[ClassDefContext], None]]:
-        print(f"get_metaclass_hook: {fullname}")
+        # print(f"get_metaclass_hook: {fullname}")
         return None
 
     def get_base_class_hook(self, fullname: str
                             ) -> Optional[Callable[[ClassDefContext], None]]:
-        print(f"get_base_class_hook: {fullname}")
+        # print(f"get_base_class_hook: {fullname}")
         def analyze(classDef):
             print(f"*** Found zope interface: {classDef.cls.fullname}")
             classDef.cls.info.metadata['is_interface'] = True
@@ -130,7 +130,7 @@ class ZopeInterfacePlugin(Plugin):
 
     def get_customize_class_mro_hook(self, fullname: str
                                      ) -> Optional[Callable[[ClassDefContext], None]]:
-        print(f"get_customize_class_mro_hook: {fullname}")
+        # print(f"get_customize_class_mro_hook: {fullname}")
         def analyze(classDefContext):
             info = classDefContext.cls.info
             if not info.metadata.get('implements'):
@@ -144,9 +144,7 @@ class ZopeInterfacePlugin(Plugin):
             info.mro.append(stn.node)
             api.calculate_abstract_status(info)
 
-        if fullname.startswith("sample"):
-            return analyze
-        return None
+        return analyze
 
 def plugin(version):
     return ZopeInterfacePlugin
