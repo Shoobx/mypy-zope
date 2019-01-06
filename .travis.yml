@@ -6,6 +6,7 @@ install:
   - pip install --upgrade -e .[test]
   - pip install coveralls
 script:
-  - pytest --cov src/mypy_zope
+  - pytest -v --cov src/mypy_zope
+  - mypy src --strict
 after_success:
   coveralls
