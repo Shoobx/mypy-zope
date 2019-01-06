@@ -1,7 +1,13 @@
+from typing import Type
+
 class Interface:
     ...
 
-def implementer(iface): ...
+class implementer(object):
+    def __init__(self, *interfaces: Type[Interface]):
+        ...
+    def __call__(self, ob):
+        ...
 
 class Element:
     def __init__(self, __name__: str, __doc__='') -> None:

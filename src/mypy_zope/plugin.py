@@ -9,7 +9,8 @@ from mypy.types import (
 from mypy.checker import TypeChecker, is_false_literal
 from mypy.nodes import TypeInfo
 from mypy.plugin import (
-    CheckerPluginInterface, MethodSigContext, Plugin,
+    CheckerPluginInterface, SemanticAnalyzerPluginInterface,
+    MethodSigContext, Plugin,
     AnalyzeTypeContext, FunctionContext, MethodContext, AttributeContext,
     ClassDefContext
 )
@@ -17,7 +18,7 @@ from mypy.semanal import SemanticAnalyzerPass2
 from mypy.options import Options
 
 from mypy.nodes import (
-    Decorator, Var, Argument, FuncDef, CallExpr, NameExpr, Expression,
+    Decorator, Var, Argument, FuncDef, CallExpr, NameExpr, RefExpr, Expression,
     ARG_POS
 )
 
@@ -141,34 +142,41 @@ class ZopeInterfacePlugin(Plugin):
     def get_class_decorator_hook(self, fullname: str
                                  ) -> Optional[Callable[[ClassDefContext], None]]:
         # print(f"get_class_decorator_hook: {fullname}")
-        def analyze(classdef_ctx: ClassDefContext) -> None:
-            api = classdef_ctx.api
 
-            decor = cast(CallExpr, classdef_ctx.reason)
-            if len(decor.args) != 1:
-                api.fail(f"Implementer should accept one interface", decor)
+        def apply_interface(iface_arg: Expression, class_info: TypeInfo,
+                            api: SemanticAnalyzerPluginInterface) -> None:
+            if not isinstance(iface_arg, RefExpr):
+                api.fail("Argument to implementer should be a ref expression",
+                         iface_arg)
                 return
-            if not isinstance(decor.args[0], NameExpr):
-                api.fail("Argument to implementer should be a name expression",
-                         decor)
-                return
-            iface_name = decor.args[0].fullname
+            iface_name = iface_arg.fullname
             if iface_name is None:
-                api.fail("Interface should be specified", decor)
+                api.fail("Interface should be specified (should never happen)", iface_arg)
                 return
+
             iface_node = api.lookup_fully_qualified(iface_name)
             iface_type = cast(TypeInfo, iface_node.node)
 
             if not self._is_interface(iface_type):
-                api.fail("zope.interface.implementer accepts interface", decor)
+                api.fail(f"zope.interface.implementer accepts interface (not {iface_name})", iface_arg)
                 return
 
-            class_info = classdef_ctx.cls.info
             # print("CLASS INFO", class_info)
             md = self._get_metadata(class_info)
-            md['implements'] = iface_type.fullname()
+            if 'implements' not in md:
+                md['implements'] = []
+            # impl_list = cast(List[str], md['implements'])
+            md['implements'].append(iface_type.fullname())
             print(f"*** Found implementation of {iface_type.fullname()}: {class_info.fullname()}")
             class_info.mro.append(iface_type)
+
+        def analyze(classdef_ctx: ClassDefContext) -> None:
+            api = classdef_ctx.api
+
+            decor = cast(CallExpr, classdef_ctx.reason)
+
+            for iface_arg in decor.args:
+                apply_interface(iface_arg, classdef_ctx.cls.info, api)
 
         if fullname=='zope.interface.implementer':
             return analyze
@@ -223,15 +231,16 @@ class ZopeInterfacePlugin(Plugin):
             info = classdef_ctx.cls.info
             md = self._get_metadata(info)
             # import ipdb; ipdb.set_trace()
-            iface_expr = cast(str, md.get('implements'))
-            if not iface_expr:
+            iface_exprs = cast(List[str], md.get('implements'))
+            if not iface_exprs:
                 return
 
             # iface_type = api.expr_to_analyzed_type(iface_expr)
-            stn = classdef_ctx.api.lookup_fully_qualified(iface_expr)
-            print(f"*** Adding {iface_expr} to MRO of {info.fullname()}")
-            # import ipdb; ipdb.set_trace()
-            info.mro.extend(cast(TypeInfo, stn.node).mro)
+            for iface_expr in iface_exprs:
+                stn = classdef_ctx.api.lookup_fully_qualified(iface_expr)
+                print(f"*** Adding {iface_expr} to MRO of {info.fullname()}")
+                # import ipdb; ipdb.set_trace()
+                info.mro.extend(cast(TypeInfo, stn.node).mro)
 
             # XXX: Reuse abstract status checker from SemanticAnalyzerPass2.
             # Ideally, implement a dedicated interface verifier.
