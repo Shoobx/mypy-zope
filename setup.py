@@ -10,6 +10,7 @@ setup(
     package_dir={'': 'src'},
     install_requires = [
         'mypy',
-        'zope-interface'
+        'zope-interface',
+        'zope-schema'
     ]
 )

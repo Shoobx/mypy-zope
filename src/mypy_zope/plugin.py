@@ -1,4 +1,4 @@
-from typing import Dict, Any, Callable, Optional
+from typing import List, Dict, Any, Callable, Optional
 from typing import Type as PyType
 from typing import cast
 
@@ -6,6 +6,7 @@ from mypy.types import (
     Type, Instance, CallableType, TypedDictType, UnionType, NoneTyp, TypeVarType,
     AnyType, TypeList, UnboundType, TypeOfAny, TypeType
 )
+from mypy.checker import TypeChecker, is_false_literal
 from mypy.nodes import TypeInfo
 from mypy.plugin import (
     CallableType, CheckerPluginInterface, MethodSigContext, Plugin,
@@ -15,8 +16,42 @@ from mypy.plugin import (
 from mypy.semanal import SemanticAnalyzerPass2
 
 from mypy.nodes import (
-    Decorator, Var, Argument, FuncDef, CallExpr, NameExpr, ARG_POS
+    Decorator, Var, Argument, FuncDef, CallExpr, NameExpr, Expression,
+    ARG_POS
 )
+
+ZOPE_FIELD_DEFAULT_PARAM_NUM = 3
+
+def _make_optional(required_arg: List[Expression], typ: Type) -> Type:
+    # Optionally make type optional
+    if not required_arg:
+        # Required arg is not provided, assume True
+        return typ
+    # Check if required_arg represents 'False' (it is "True" by default)
+    if not is_false_literal(required_arg[0]):
+        return typ
+
+    # Field is explicitly marked as non-required, make it "Optional"
+    nonetyp = NoneTyp()
+    uniontyp = UnionType([typ, nonetyp])
+    return uniontyp
+
+def make_text_type(args: List[List[Expression]],
+                   api: CheckerPluginInterface) -> Type:
+    stdtype = api.named_generic_type('str', [])
+    return _make_optional(args[ZOPE_FIELD_DEFAULT_PARAM_NUM], stdtype)
+
+
+def make_bool_type(args: List[List[Expression]],
+                   api: CheckerPluginInterface) -> Type:
+    stdtype = api.named_generic_type('bool', [])
+    return _make_optional(args[ZOPE_FIELD_DEFAULT_PARAM_NUM], stdtype)
+
+
+FIELD_TO_TYPE_MAKER = {
+    'zope.schema.Text': make_text_type,
+    'zope.schema.Bool': make_bool_type
+}
 
 
 class ZopeInterfacePlugin(Plugin):
@@ -28,7 +63,49 @@ class ZopeInterfacePlugin(Plugin):
     def get_function_hook(self, fullname: str
                           ) -> Optional[Callable[[FunctionContext], Type]]:
         # print(f"get_function_hook: {fullname}")
-        return None
+        def analyze(function_ctx: FunctionContext) -> Type:
+            # strtype = function_ctx.api.named_generic_type('builtins.str', [])
+            # optstr = function_ctx.api.named_generic_type('typing.Optional', [strtype])
+            api = function_ctx.api
+            deftype = function_ctx.default_return_type
+
+            # If we are not processing an interface, leave the type as is
+            assert isinstance(api, TypeChecker)
+            scopecls = api.scope.active_class()
+            if scopecls is None:
+                return deftype
+
+            if not self._is_interface(scopecls):
+                return deftype
+
+            # If default type is a zope.schema.Field, we should convert it to a
+            # python type
+            if not isinstance(deftype, Instance):
+                return deftype
+
+            fieldtype = api.named_generic_type('zope.schema.Field', [])
+            assert isinstance(fieldtype, Instance)
+            if fieldtype.type not in deftype.type.mro:
+                return deftype
+
+            # If it is a konwn field, build a python type out of it
+            parent_names = [t.fullname() for t in deftype.type.mro]
+            for clsname in parent_names:
+                maker = FIELD_TO_TYPE_MAKER.get(clsname)
+                if maker is None:
+                    continue
+
+                convtype = maker(function_ctx.args, function_ctx.api)
+                print(f"*** Converting a field {deftype} into type {convtype} "
+                      f"for {scopecls.fullname()}")
+                return convtype
+
+            # For unknown fields, just return ANY
+            print(f"*** Unknown field {deftype} in interface {scopecls.fullname()}")
+            return AnyType(TypeOfAny.implementation_artifact,
+                           line=deftype.line, column=deftype.column)
+
+        return analyze
 
     def get_method_signature_hook(self, fullname: str
                                   ) -> Optional[Callable[[MethodSigContext], CallableType]]:
@@ -52,7 +129,7 @@ class ZopeInterfacePlugin(Plugin):
             api = classdef_ctx.api
 
             decor = cast(CallExpr, classdef_ctx.reason)
-            if len(decor.args) !=1:
+            if len(decor.args) != 1:
                 api.fail(f"Implementer should accept one interface", decor)
                 return
             if not isinstance(decor.args[0], NameExpr):
@@ -66,8 +143,7 @@ class ZopeInterfacePlugin(Plugin):
             iface_node = api.lookup_fully_qualified(iface_name)
             iface_type = cast(TypeInfo, iface_node.node)
 
-            md = self._get_metadata(iface_type)
-            if not md.get('is_interface'):
+            if not self._is_interface(iface_type):
                 api.fail("zope.interface.implementer accepts interface", decor)
                 return
 
@@ -101,7 +177,6 @@ class ZopeInterfacePlugin(Plugin):
             if not isinstance(classdef_ctx.reason, NameExpr):
                 return
             cls_info = classdef_ctx.cls.info
-            cls_md = self._get_metadata(cls_info)
             api = classdef_ctx.api
             base_name = classdef_ctx.reason.fullname
             if not base_name:
@@ -111,9 +186,9 @@ class ZopeInterfacePlugin(Plugin):
                 return
 
             base_info = cast(TypeInfo, base_node.node)
-            base_md = self._get_metadata(base_info)
-            if base_md.get('is_interface'):
+            if self._is_interface(base_info):
                 print(f"*** Found zope subinterface: {cls_info.fullname()}")
+                cls_md = self._get_metadata(cls_info)
                 cls_md['is_interface'] = True
                 self._process_zope_interface(cls_info)
 
@@ -130,6 +205,7 @@ class ZopeInterfacePlugin(Plugin):
         def analyze(classdef_ctx: ClassDefContext) -> None:
             info = classdef_ctx.cls.info
             md = self._get_metadata(info)
+            # import ipdb; ipdb.set_trace()
             iface_expr = cast(str, md.get('implements'))
             if not iface_expr:
                 return
@@ -137,6 +213,7 @@ class ZopeInterfacePlugin(Plugin):
             # iface_type = api.expr_to_analyzed_type(iface_expr)
             stn = classdef_ctx.api.lookup_fully_qualified(iface_expr)
             print(f"*** Adding {iface_expr} to MRO of {info.fullname()}")
+            # import ipdb; ipdb.set_trace()
             info.mro.extend(cast(TypeInfo, stn.node).mro)
 
             # XXX: Reuse abstract status checker from SemanticAnalyzerPass2.
@@ -151,10 +228,15 @@ class ZopeInterfacePlugin(Plugin):
             typeinfo.metadata['zope'] = {}
         return typeinfo.metadata['zope']
 
+    def _is_interface(self, typeinfo: TypeInfo) -> bool:
+        md = self._get_metadata(typeinfo)
+        return md.get('is_interface', False)
+
     def _process_zope_interface(self, type_info: TypeInfo) -> None:
         type_info.is_abstract = True
         for name, node in type_info.names.items():
             if not isinstance(node.node, FuncDef):
+                # import ipdb; ipdb.set_trace()
                 continue
             selftype = Instance(type_info, [],
                                 line=type_info.line,
@@ -180,8 +262,6 @@ class ZopeInterfacePlugin(Plugin):
             var.info = func.info
             var.set_line(func.line)
             node.node = Decorator(func, [], var)
-
-        pass
 
 def plugin(version: str) -> PyType[Plugin]:
     return ZopeInterfacePlugin
