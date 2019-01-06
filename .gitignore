@@ -1,6 +1,7 @@
 ve
 .mypy_cache
 .pytest_cache
+.coverage
 __pycache__
 *.egg-info
 tags

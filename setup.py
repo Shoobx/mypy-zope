@@ -12,5 +12,7 @@ setup(
         'mypy',
         'zope-interface',
         'zope-schema'
-    ]
+    ],
+    extras_require={'test': ["pytest>=4.0.0,<4.1.0", "pytest-cov"]},
+
 )

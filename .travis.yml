@@ -1,0 +1,11 @@
+# Configuration script to Travis-CI
+language: python
+python:
+  - "3.6"
+install:
+  - pip install --upgrade -e .[test]
+  - pip install coveralls
+script:
+  - pytest --cov src/mypy_zope
+after_success:
+  coveralls
