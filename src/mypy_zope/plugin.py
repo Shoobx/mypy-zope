@@ -14,7 +14,7 @@ from mypy.plugin import (
     AnalyzeTypeContext, FunctionContext, MethodContext, AttributeContext,
     ClassDefContext
 )
-from mypy.semanal import SemanticAnalyzerPass2
+from mypy.semanal import SemanticAnalyzerPass2, merge
 from mypy.options import Options
 
 from mypy.nodes import (
@@ -230,17 +230,17 @@ class ZopeInterfacePlugin(Plugin):
         def analyze(classdef_ctx: ClassDefContext) -> None:
             info = classdef_ctx.cls.info
             md = self._get_metadata(info)
-            # import ipdb; ipdb.set_trace()
             iface_exprs = cast(List[str], md.get('implements'))
             if not iface_exprs:
                 return
 
-            # iface_type = api.expr_to_analyzed_type(iface_expr)
+            seqs = [info.mro]
             for iface_expr in iface_exprs:
                 stn = classdef_ctx.api.lookup_fully_qualified(iface_expr)
                 print(f"*** Adding {iface_expr} to MRO of {info.fullname()}")
-                # import ipdb; ipdb.set_trace()
-                info.mro.extend(cast(TypeInfo, stn.node).mro)
+                seqs.append(cast(TypeInfo, stn.node).mro)
+
+            info.mro = merge(seqs)
 
             # XXX: Reuse abstract status checker from SemanticAnalyzerPass2.
             # Ideally, implement a dedicated interface verifier.
@@ -262,7 +262,6 @@ class ZopeInterfacePlugin(Plugin):
         type_info.is_abstract = True
         for name, node in type_info.names.items():
             if not isinstance(node.node, FuncDef):
-                # import ipdb; ipdb.set_trace()
                 continue
             selftype = Instance(type_info, [],
                                 line=type_info.line,
