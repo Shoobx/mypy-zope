@@ -9,7 +9,7 @@ $(VE): setup.py
 
 .PHONY: test
 test:
-	$(VEBIN)/pytest
+	$(VEBIN)/pytest -v --cov src/mypy_zope
 
 # Mypy self-test
 .PHONY: mypy
