@@ -100,13 +100,11 @@ class ZopeInterfacePlugin(Plugin):
             if not isinstance(deftype, Instance):
                 return deftype
 
-            fieldtype = api.named_generic_type('zope.schema.Field', [])
-            assert isinstance(fieldtype, Instance)
-            if fieldtype.type not in deftype.type.mro:
+            parent_names = [t.fullname() for t in deftype.type.mro]
+            if 'zope.interface.Attribute' not in parent_names:
                 return deftype
 
             # If it is a konwn field, build a python type out of it
-            parent_names = [t.fullname() for t in deftype.type.mro]
             for clsname in parent_names:
                 maker = FIELD_TO_TYPE_MAKER.get(clsname)
                 if maker is None:
