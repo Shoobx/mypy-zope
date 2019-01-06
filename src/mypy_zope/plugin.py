@@ -22,6 +22,7 @@ from mypy.nodes import (
 
 ZOPE_FIELD_DEFAULT_PARAM_NUM = 3
 
+
 def _make_optional(required_arg: List[Expression], typ: Type) -> Type:
     # Optionally make type optional
     if not required_arg:
@@ -36,21 +37,31 @@ def _make_optional(required_arg: List[Expression], typ: Type) -> Type:
     uniontyp = UnionType([typ, nonetyp])
     return uniontyp
 
-def make_text_type(args: List[List[Expression]],
-                   api: CheckerPluginInterface) -> Type:
-    stdtype = api.named_generic_type('str', [])
-    return _make_optional(args[ZOPE_FIELD_DEFAULT_PARAM_NUM], stdtype)
 
-
-def make_bool_type(args: List[List[Expression]],
-                   api: CheckerPluginInterface) -> Type:
-    stdtype = api.named_generic_type('bool', [])
+def make_simple_type(fieldtype: str, args: List[List[Expression]],
+                     api: CheckerPluginInterface) -> Optional[Type]:
+    typename = SIMPLE_FIELD_TO_TYPE.get(fieldtype)
+    if not typename:
+        return None
+    stdtype = api.named_generic_type(typename, [])
     return _make_optional(args[ZOPE_FIELD_DEFAULT_PARAM_NUM], stdtype)
 
 
 FIELD_TO_TYPE_MAKER = {
-    'zope.schema.Text': make_text_type,
-    'zope.schema.Bool': make_bool_type
+    'zope.schema.Text': make_simple_type,
+    'zope.schema.Bool': make_simple_type,
+    'zope.schema.Complex': make_simple_type,
+    'zope.schema.Real': make_simple_type,
+    'zope.schema.Int': make_simple_type,
+
+}
+
+SIMPLE_FIELD_TO_TYPE = {
+    'zope.schema.Text': 'str',
+    'zope.schema.Bool': 'bool',
+    'zope.schema.Complex': 'complex',
+    'zope.schema.Real': 'float',
+    'zope.schema.Int': 'int',
 }
 
 
@@ -95,10 +106,11 @@ class ZopeInterfacePlugin(Plugin):
                 if maker is None:
                     continue
 
-                convtype = maker(function_ctx.args, function_ctx.api)
-                print(f"*** Converting a field {deftype} into type {convtype} "
-                      f"for {scopecls.fullname()}")
-                return convtype
+                convtype = maker(clsname, function_ctx.args, function_ctx.api)
+                if convtype:
+                    print(f"*** Converting a field {deftype} into type {convtype} "
+                          f"for {scopecls.fullname()}")
+                    return convtype
 
             # For unknown fields, just return ANY
             print(f"*** Unknown field {deftype} in interface {scopecls.fullname()}")
