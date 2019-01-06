@@ -24,7 +24,6 @@ def test_samples(samplefile, mypy_cache_dir):
     opts = options.Options()
     opts.cache_dir = mypy_cache_dir
     opts.show_traceback = True
-    opts.mypy_path = ['stubs']
     opts.plugins = ['mypy_zope:plugin']
     # Config file is needed to load plugins, it doesn't not exist and is not
     # supposed to.

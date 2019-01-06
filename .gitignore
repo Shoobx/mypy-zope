@@ -3,6 +3,8 @@ ve
 .pytest_cache
 .coverage
 __pycache__
+build
+dist
 *.egg-info
 tags
 .tags

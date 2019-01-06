@@ -1,19 +1,20 @@
+import os
 from typing import List, Dict, Any, Callable, Optional
 from typing import Type as PyType
 from typing import cast
 
 from mypy.types import (
-    Type, Instance, CallableType, TypedDictType, UnionType, NoneTyp, TypeVarType,
-    AnyType, TypeList, UnboundType, TypeOfAny, TypeType
+    Type, Instance, CallableType, UnionType, NoneTyp, AnyType, TypeOfAny
 )
 from mypy.checker import TypeChecker, is_false_literal
 from mypy.nodes import TypeInfo
 from mypy.plugin import (
-    CallableType, CheckerPluginInterface, MethodSigContext, Plugin,
+    CheckerPluginInterface, MethodSigContext, Plugin,
     AnalyzeTypeContext, FunctionContext, MethodContext, AttributeContext,
     ClassDefContext
 )
 from mypy.semanal import SemanticAnalyzerPass2
+from mypy.options import Options
 
 from mypy.nodes import (
     Decorator, Var, Argument, FuncDef, CallExpr, NameExpr, Expression,
@@ -66,6 +67,11 @@ SIMPLE_FIELD_TO_TYPE = {
 
 
 class ZopeInterfacePlugin(Plugin):
+    def __init__(self, options: Options) -> None:
+        here = os.path.dirname(__file__)
+        options.mypy_path.append(os.path.join(here, 'stubs'))
+        super(ZopeInterfacePlugin, self).__init__(options)
+
     def get_type_analyze_hook(self, fullname: str
                               ) -> Optional[Callable[[AnalyzeTypeContext], Type]]:
         # print(f"get_type_analyze_hook: {fullname}")
@@ -196,9 +202,10 @@ class ZopeInterfacePlugin(Plugin):
             base_node = api.lookup_fully_qualified_or_none(base_name)
             if not base_node:
                 return
+            if not isinstance(base_node.node, TypeInfo):
+                return
 
-            base_info = cast(TypeInfo, base_node.node)
-            if self._is_interface(base_info):
+            if self._is_interface(base_node.node):
                 print(f"*** Found zope subinterface: {cls_info.fullname()}")
                 cls_md = self._get_metadata(cls_info)
                 cls_md['is_interface'] = True
@@ -275,5 +282,31 @@ class ZopeInterfacePlugin(Plugin):
             var.set_line(func.line)
             node.node = Decorator(func, [], var)
 
+
+# HACK: we want to inject zope stub path into mypy search path. Unfortunately
+# there is no legal way for plugins to do that ATM, so we resort to
+# monkeypatching.
+from mypy import build
+from mypy.modulefinder import SearchPaths
+class MypyZopeBuildManager(build.BuildManager):
+    def __init__(self, data_dir: str, search_paths: SearchPaths, *args: Any, **kwargs: Any) -> None:
+        here = os.path.dirname(__file__)
+        zope_search_paths = SearchPaths(
+            python_path=search_paths.python_path,
+            mypy_path=search_paths.mypy_path,
+            package_path=search_paths.package_path,
+            typeshed_path=search_paths.typeshed_path + (os.path.join(here, 'stubs'), ),
+        )
+        super(MypyZopeBuildManager, self).__init__(
+           data_dir, zope_search_paths, *args, **kwargs)
+
+
+def monkey_patch_build_manager() -> None:
+    build.BuildManager = MypyZopeBuildManager  # type: ignore
+
+
 def plugin(version: str) -> PyType[Plugin]:
+    # TODO: Submit a patch for mypy to allow customization of search paths for
+    # plugins and remove monkeypatching
+    monkey_patch_build_manager()
     return ZopeInterfacePlugin

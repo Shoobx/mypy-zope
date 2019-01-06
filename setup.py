@@ -13,6 +13,21 @@ setup(
         'zope-interface',
         'zope-schema'
     ],
-    extras_require={'test': ["pytest>=4.0.0,<4.1.0", "pytest-cov"]},
-
+    extras_require={'test': [
+        "pytest>=4.0.0,<4.1.0",
+        "pytest-cov",
+        "lxml"
+    ]},
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Topic :: Software Development",
+    ],
+    include_package_data=True,
+    zip_safe=False
 )
