@@ -198,7 +198,7 @@ class ZopeInterfacePlugin(Plugin):
 
         def analyze_subinterface(classdef_ctx: ClassDefContext) -> None:
             # If one of the bases is an interface, this is also an interface
-            if not isinstance(classdef_ctx.reason, NameExpr):
+            if not isinstance(classdef_ctx.reason, RefExpr):
                 return
             cls_info = classdef_ctx.cls.info
             api = classdef_ctx.api
@@ -220,9 +220,7 @@ class ZopeInterfacePlugin(Plugin):
         if fullname == 'zope.interface.Interface':
             return analyze_direct
 
-        # if fullname == 'interface_inheritance.ISomething':
         return analyze_subinterface
-        # return None
 
     def get_customize_class_mro_hook(self, fullname: str
                                      ) -> Optional[Callable[[ClassDefContext], None]]:
