@@ -159,8 +159,12 @@ class ZopeInterfacePlugin(Plugin):
                 api.fail("Interface should be specified (should never happen)", iface_arg)
                 return
 
-            iface_node = api.lookup_fully_qualified(iface_name)
-            iface_type = cast(TypeInfo, iface_node.node)
+            iface_type = iface_arg.node
+            if iface_type is None:
+                return
+            if not isinstance(iface_type, TypeInfo):
+                # Possibly an interface from unimported package, ignore
+                return
 
             if not self._is_interface(iface_type):
                 api.fail(f"zope.interface.implementer accepts interface (not {iface_name})", iface_arg)
