@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import List, Dict, Any, Callable, Optional
 from typing import Type as PyType
 from typing import cast
@@ -73,6 +74,10 @@ class ZopeInterfacePlugin(Plugin):
         options.mypy_path.append(os.path.join(here, 'stubs'))
         super(ZopeInterfacePlugin, self).__init__(options)
 
+    def log(self, msg: str) -> None:
+        if self.options.verbosity  >=1:
+            print("ZOPE:", msg, file=sys.stderr)
+
     def get_type_analyze_hook(self, fullname: str
                               ) -> Optional[Callable[[AnalyzeTypeContext], Type]]:
         # print(f"get_type_analyze_hook: {fullname}")
@@ -113,12 +118,12 @@ class ZopeInterfacePlugin(Plugin):
 
                 convtype = maker(clsname, function_ctx.args, function_ctx.api)
                 if convtype:
-                    print(f"*** Converting a field {deftype} into type {convtype} "
-                          f"for {scopecls.fullname()}")
+                    self.log(f"Converting a field {deftype} into type {convtype} "
+                             f"for {scopecls.fullname()}")
                     return convtype
 
             # For unknown fields, just return ANY
-            print(f"*** Unknown field {deftype} in interface {scopecls.fullname()}")
+            self.log(f"Unknown field {deftype} in interface {scopecls.fullname()}")
             return AnyType(TypeOfAny.implementation_artifact,
                            line=deftype.line, column=deftype.column)
 
@@ -167,7 +172,7 @@ class ZopeInterfacePlugin(Plugin):
                 md['implements'] = []
             # impl_list = cast(List[str], md['implements'])
             md['implements'].append(iface_type.fullname())
-            print(f"*** Found implementation of {iface_type.fullname()}: {class_info.fullname()}")
+            self.log(f"Found implementation of {iface_type.fullname()}: {class_info.fullname()}")
             class_info.mro.append(iface_type)
 
         def analyze(classdef_ctx: ClassDefContext) -> None:
@@ -191,7 +196,7 @@ class ZopeInterfacePlugin(Plugin):
                             ) -> Optional[Callable[[ClassDefContext], None]]:
         # print(f"get_base_class_hook: {fullname}")
         def analyze_direct(classdef_ctx: ClassDefContext) -> None:
-            print(f"*** Found zope interface: {classdef_ctx.cls.fullname}")
+            self.log(f"Found zope interface: {classdef_ctx.cls.fullname}")
             md = self._get_metadata(classdef_ctx.cls.info)
             md['is_interface'] = True
             self._process_zope_interface(classdef_ctx.cls.info)
@@ -212,7 +217,7 @@ class ZopeInterfacePlugin(Plugin):
                 return
 
             if self._is_interface(base_node.node):
-                print(f"*** Found zope subinterface: {cls_info.fullname()}")
+                self.log(f"Found zope subinterface: {cls_info.fullname()}")
                 cls_md = self._get_metadata(cls_info)
                 cls_md['is_interface'] = True
                 self._process_zope_interface(cls_info)
@@ -235,7 +240,7 @@ class ZopeInterfacePlugin(Plugin):
             seqs = [info.mro]
             for iface_expr in iface_exprs:
                 stn = classdef_ctx.api.lookup_fully_qualified(iface_expr)
-                print(f"*** Adding {iface_expr} to MRO of {info.fullname()}")
+                self.log(f"Adding {iface_expr} to MRO of {info.fullname()}")
                 seqs.append(cast(TypeInfo, stn.node).mro)
 
             info.mro = merge(seqs)
