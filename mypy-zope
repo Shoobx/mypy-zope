@@ -1,0 +1,2 @@
+#!/bin/sh -x
+ve/bin/mypy --config-file mypy-zope.ini  --show-traceback $@
