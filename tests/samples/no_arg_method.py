@@ -36,10 +36,6 @@ if __name__ == '__main__':
     main()
 
 """
-These errors should not really be reported, but mypy fix is needed
-
 <output>
-no_arg_method.py:9: error: Method must have at least one argument
-no_arg_method.py:27: error: Argument 1 to "add" of "ISomething" has incompatible type "int"; expected "ISomething"
 </output>
 """

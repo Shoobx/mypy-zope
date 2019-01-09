@@ -19,8 +19,8 @@ from mypy.semanal import SemanticAnalyzerPass2, merge
 from mypy.options import Options
 
 from mypy.nodes import (
-    Decorator, Var, Argument, FuncDef, CallExpr, NameExpr, RefExpr, Expression,
-    ARG_POS
+    Decorator, Var, Argument, FuncDef, CallExpr, RefExpr, Expression,
+    ClassDef, Statement, ARG_POS
 )
 
 ZOPE_FIELD_DEFAULT_PARAM_NUM = 3
@@ -47,6 +47,8 @@ def make_simple_type(fieldtype: str, args: List[List[Expression]],
     if not typename:
         return None
     stdtype = api.named_generic_type(typename, [])
+    if len(args) -1 < ZOPE_FIELD_DEFAULT_PARAM_NUM:
+        return stdtype
     return _make_optional(args[ZOPE_FIELD_DEFAULT_PARAM_NUM], stdtype)
 
 
@@ -203,7 +205,6 @@ class ZopeInterfacePlugin(Plugin):
             self.log(f"Found zope interface: {classdef_ctx.cls.fullname}")
             md = self._get_metadata(classdef_ctx.cls.info)
             md['is_interface'] = True
-            self._process_zope_interface(classdef_ctx.cls.info)
 
         def analyze_subinterface(classdef_ctx: ClassDefContext) -> None:
             # If one of the bases is an interface, this is also an interface
@@ -224,7 +225,6 @@ class ZopeInterfacePlugin(Plugin):
                 self.log(f"Found zope subinterface: {cls_info.fullname()}")
                 cls_md = self._get_metadata(cls_info)
                 cls_md['is_interface'] = True
-                self._process_zope_interface(cls_info)
 
         if fullname == 'zope.interface.Interface':
             return analyze_direct
@@ -236,6 +236,12 @@ class ZopeInterfacePlugin(Plugin):
         # print(f"get_customize_class_mro_hook: {fullname}")
         def analyze(classdef_ctx: ClassDefContext) -> None:
             info = classdef_ctx.cls.info
+            directiface = 'zope.interface.Interface' in [b.type.fullname() for b in info.bases]
+            subinterface = any(self._is_interface(b.type) for b in info.bases)
+            if directiface or subinterface:
+                self._analyze_zope_interface(classdef_ctx.cls)
+                return
+
             md = self._get_metadata(info)
             iface_exprs = cast(List[str], md.get('implements'))
             if not iface_exprs:
@@ -243,7 +249,9 @@ class ZopeInterfacePlugin(Plugin):
 
             seqs = [info.mro]
             for iface_expr in iface_exprs:
-                stn = classdef_ctx.api.lookup_fully_qualified(iface_expr)
+                stn = classdef_ctx.api.lookup_fully_qualified_or_none(iface_expr)
+                if stn is None:
+                    continue
                 self.log(f"Adding {iface_expr} to MRO of {info.fullname()}")
                 seqs.append(cast(TypeInfo, stn.node).mro)
 
@@ -256,6 +264,15 @@ class ZopeInterfacePlugin(Plugin):
 
         return analyze
 
+    def _analyze_zope_interface(self, cls: ClassDef) -> None:
+        self.log(f"Adjusting zope interface: {cls.info.fullname()}")
+        for idx, item in enumerate(cls.defs.body):
+            if not isinstance(item, FuncDef):
+                continue
+
+            replacement = self._adjust_interface_function(cls.info, item)
+            cls.defs.body[idx] = replacement
+
     def _get_metadata(self, typeinfo: TypeInfo) -> Dict[str, Any]:
         if 'zope' not in typeinfo.metadata:
             typeinfo.metadata['zope'] = {}
@@ -265,35 +282,31 @@ class ZopeInterfacePlugin(Plugin):
         md = self._get_metadata(typeinfo)
         return md.get('is_interface', False)
 
-    def _process_zope_interface(self, type_info: TypeInfo) -> None:
-        type_info.is_abstract = True
-        for name, node in type_info.names.items():
-            if not isinstance(node.node, FuncDef):
-                continue
-            selftype = Instance(type_info, [],
-                                line=type_info.line,
-                                column=type_info.column)
-            selfarg = Argument(Var('self', None), selftype, None, ARG_POS)
+    def _adjust_interface_function(self, class_info: TypeInfo,
+                                   func_def: FuncDef) -> Statement:
+        selftype = Instance(class_info, [],
+                            line=class_info.line,
+                            column=class_info.column)
+        selfarg = Argument(Var('self', None), selftype, None, ARG_POS)
+        func_def.is_abstract = True
+        func_def.is_decorated = True
 
-            func = node.node
-            func.is_abstract = True
-            func.is_decorated = True
-            func.arg_names.insert(0, 'self')
-            func.arg_kinds.insert(0, ARG_POS)
-            func.arguments.insert(0, selfarg)
+        if isinstance(func_def.type, CallableType):
+            func_def.type.arg_names.insert(0, 'self')
+            func_def.type.arg_kinds.insert(0, ARG_POS)
+            func_def.type.arg_types.insert(0, selftype)
+        # func_def.arg_types.insert(0, selftype)
+        func_def.arg_names.insert(0, 'self')
+        func_def.arg_kinds.insert(0, ARG_POS)
+        func_def.arguments.insert(0, selfarg)
 
-            if isinstance(func.type, CallableType):
-                func.type.arg_names.insert(0, 'self')
-                func.type.arg_kinds.insert(0, ARG_POS)
-                func.type.arg_types.insert(0, selftype)
-
-            # func.is_static = True
-            var = Var(name, func.type)
-            var.is_initialized_in_class=True
-            # var.is_staticmethod = True
-            var.info = func.info
-            var.set_line(func.line)
-            node.node = Decorator(func, [], var)
+        var = Var(func_def.name(), func_def.type)
+        var.is_initialized_in_class=True
+        # var.is_staticmethod = True
+        var.info = func_def.info
+        var.set_line(func_def.line)
+        decor = Decorator(func_def, [], var)
+        return decor
 
 
 # HACK: we want to inject zope stub path into mypy search path. Unfortunately
