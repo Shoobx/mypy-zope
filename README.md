@@ -72,6 +72,21 @@ getting the type `int` in the example above. That means mypy will report an
 error if you try to assign string to that attribute on an instance of a `Cow`
 class. Custom fields or fields not recognized by plugin are given type `Any`.
 
+### Adaptation pattern
+
+Zope interfaces can be "called" to lookup an adapter, like this:
+
+```python
+class IEUPowerSocket(zope.interface.Interface):
+    def fit():
+        pass
+
+adapter = IEUPowerSocket(us_plug)
+adapter.fit()
+```
+
+Type of the `adapter` variable will be set to `IEUPowerSocket`.
+
 ### Type stubs for zope.interface and zope.schema
 
 `mypy-zope` ships with type stubs (`*.pyi` files) for `zope.interface` and
@@ -91,3 +106,4 @@ These `zope.interface` features are not supported:
 Currently the project is in a very early stage of development and
 might not be practically usable yet. Suggestions and pull requests are
 welcomed!
+

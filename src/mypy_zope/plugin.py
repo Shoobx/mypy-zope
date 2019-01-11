@@ -13,14 +13,15 @@ from mypy.plugin import (
     CheckerPluginInterface, SemanticAnalyzerPluginInterface,
     MethodSigContext, Plugin,
     AnalyzeTypeContext, FunctionContext, MethodContext, AttributeContext,
-    ClassDefContext
+    ClassDefContext, SymbolTableNode
 )
 from mypy.semanal import SemanticAnalyzerPass2, merge
 from mypy.options import Options
 
 from mypy.nodes import (
     Decorator, Var, Argument, FuncDef, CallExpr, RefExpr, Expression,
-    ClassDef, Statement, ARG_POS
+    ClassDef, Statement, Block,
+    MDEF, ARG_POS, ARG_OPT
 )
 
 ZOPE_FIELD_DEFAULT_PARAM_NUM = 3
@@ -234,44 +235,109 @@ class ZopeInterfacePlugin(Plugin):
     def get_customize_class_mro_hook(self, fullname: str
                                      ) -> Optional[Callable[[ClassDefContext], None]]:
         # print(f"get_customize_class_mro_hook: {fullname}")
+
+        def analyze_interface_base(classdef_ctx: ClassDefContext) -> None:
+            # Create fake constructor to mimic adaptation signature
+            info = classdef_ctx.cls.info
+            api = classdef_ctx.api
+            if '__init__' in info.names:
+                # already patched
+                return
+
+            # Create a method:
+            #
+            # def __init__(self, obj, alternate=None) -> None
+            #
+            # This will make interfaces
+            selftp = Instance(info, [])
+            anytp = AnyType(TypeOfAny.implementation_artifact)
+            init_fn = CallableType(
+                arg_types=[selftp, anytp, anytp],
+                arg_kinds=[ARG_POS, ARG_POS, ARG_OPT],
+                arg_names=['self', 'obj', 'alternate'],
+                ret_type=NoneTyp(),
+                fallback=api.named_type('function')
+            )
+            newinit = FuncDef('__init__', [], Block([]), init_fn)
+            newinit.info = info
+            info.names['__init__'] = SymbolTableNode(
+                MDEF, newinit, plugin_generated=True)
+
+
         def analyze(classdef_ctx: ClassDefContext) -> None:
             info = classdef_ctx.cls.info
+
+            # If we are dealing with an interface, massage it a bit, e.g.
+            # inject `self` argument to all methods
             directiface = 'zope.interface.Interface' in [b.type.fullname() for b in info.bases]
             subinterface = any(self._is_interface(b.type) for b in info.bases)
             if directiface or subinterface:
                 self._analyze_zope_interface(classdef_ctx.cls)
                 return
 
+            # Are we customizing interface implementation instead?
             md = self._get_metadata(info)
             iface_exprs = cast(List[str], md.get('implements'))
-            if not iface_exprs:
+            if iface_exprs:
+                self._analyze_implementation(classdef_ctx.cls, iface_exprs, classdef_ctx.api)
                 return
 
-            seqs = [info.mro]
-            for iface_expr in iface_exprs:
-                stn = classdef_ctx.api.lookup_fully_qualified_or_none(iface_expr)
-                if stn is None:
-                    continue
-                self.log(f"Adding {iface_expr} to MRO of {info.fullname()}")
-                seqs.append(cast(TypeInfo, stn.node).mro)
-
-            info.mro = merge(seqs)
-
-            # XXX: Reuse abstract status checker from SemanticAnalyzerPass2.
-            # Ideally, implement a dedicated interface verifier.
-            api = cast(SemanticAnalyzerPass2, classdef_ctx.api)
-            api.calculate_abstract_status(info)
+        if fullname == 'zope.interface.Interface':
+            return analyze_interface_base
 
         return analyze
 
+    def _analyze_implementation(self, cls: ClassDef, iface_exprs: List[str],
+                                api: SemanticAnalyzerPluginInterface) -> None:
+        info = cls.info
+        # Find a suitable __init__ method
+        init_method = info.get_method('__init__')
+        assert init_method is not None
+        if init_method.info.fullname() == 'builtins.object':
+            # No __init__ defined for class or its base classes. We are going
+            # to insert interface class hierarchies into MRO, which will
+            # introduce "adaptation" __init__ method. We need to preserve the
+            # ability to instantiate implementation without parameters.
+            assert init_method.type is not None
+            assert isinstance(init_method.type, CallableType)
+            newinit_type = init_method.type \
+                .copy_modified(arg_types=[Instance(info, [])]) \
+                .with_name(f"{init_method.name()} of {info.name()}")
+            # Horrible hack to prevent abstract method instantiation error
+            newinit = FuncDef(init_method.name(), [], Block([]), newinit_type)
+            newinit.info = info
+            info.names['__init__'] = SymbolTableNode(MDEF, newinit,
+                                                     plugin_generated=True)
+
+        # Make inteface a superclass of implementation
+        seqs = [info.mro]
+        for iface_expr in iface_exprs:
+            stn = api.lookup_fully_qualified_or_none(iface_expr)
+            if stn is None:
+                continue
+            self.log(f"Adding {iface_expr} to MRO of {info.fullname()}")
+            seqs.append(cast(TypeInfo, stn.node).mro)
+
+        info.mro = merge(seqs)
+
+        # XXX: Reuse abstract status checker from SemanticAnalyzerPass2.
+        # Ideally, implement a dedicated interface verifier.
+        api = cast(SemanticAnalyzerPass2, api)
+        api.calculate_abstract_status(info)
+
     def _analyze_zope_interface(self, cls: ClassDef) -> None:
         self.log(f"Adjusting zope interface: {cls.info.fullname()}")
+
         for idx, item in enumerate(cls.defs.body):
             if not isinstance(item, FuncDef):
                 continue
 
             replacement = self._adjust_interface_function(cls.info, item)
             cls.defs.body[idx] = replacement
+
+        # Even though interface is abstract, we mark it as non-abstract to
+        # allow adaptation pattern: IInterface(context)
+        cls.info.is_abstract = False
 
     def _get_metadata(self, typeinfo: TypeInfo) -> Dict[str, Any]:
         if 'zope' not in typeinfo.metadata:
@@ -288,21 +354,19 @@ class ZopeInterfacePlugin(Plugin):
                             line=class_info.line,
                             column=class_info.column)
         selfarg = Argument(Var('self', None), selftype, None, ARG_POS)
-        func_def.is_abstract = True
-        func_def.is_decorated = True
 
         if isinstance(func_def.type, CallableType):
             func_def.type.arg_names.insert(0, 'self')
             func_def.type.arg_kinds.insert(0, ARG_POS)
             func_def.type.arg_types.insert(0, selftype)
-        # func_def.arg_types.insert(0, selftype)
         func_def.arg_names.insert(0, 'self')
         func_def.arg_kinds.insert(0, ARG_POS)
         func_def.arguments.insert(0, selfarg)
 
+        func_def.is_abstract = True
+        func_def.is_decorated = True
         var = Var(func_def.name(), func_def.type)
         var.is_initialized_in_class=True
-        # var.is_staticmethod = True
         var.info = func_def.info
         var.set_line(func_def.line)
         decor = Decorator(func_def, [], var)
