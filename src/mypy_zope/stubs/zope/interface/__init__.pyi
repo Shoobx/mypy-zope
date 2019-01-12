@@ -1,8 +1,8 @@
-from typing import Type, Any
+from typing import Type
 
 class InterfaceType(type):
     def __getitem__(self, key, default=None):
-        pass
+        ...
     ...
 
 class Interface(metaclass=InterfaceType):

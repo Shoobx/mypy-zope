@@ -95,40 +95,13 @@ class ZopeInterfacePlugin(Plugin):
             api = function_ctx.api
             deftype = function_ctx.default_return_type
 
-            # If we are not processing an interface, leave the type as is
-            assert isinstance(api, TypeChecker)
-            scopecls = api.scope.active_class()
-            if scopecls is None:
-                return deftype
+            if self._is_subclass(deftype, 'zope.interface.Attribute'):
+                return self._get_schema_field_type(deftype, function_ctx.args, api)
+            if self._is_subclass(deftype, 'zope.schema.fieldproperty.FieldProperty'):
+                # We cannot accurately determine the type, fallback to Any
+                return AnyType(TypeOfAny.implementation_artifact)
 
-            if not self._is_interface(scopecls):
-                return deftype
-
-            # If default type is a zope.schema.Field, we should convert it to a
-            # python type
-            if not isinstance(deftype, Instance):
-                return deftype
-
-            parent_names = [t.fullname() for t in deftype.type.mro]
-            if 'zope.interface.Attribute' not in parent_names:
-                return deftype
-
-            # If it is a konwn field, build a python type out of it
-            for clsname in parent_names:
-                maker = FIELD_TO_TYPE_MAKER.get(clsname)
-                if maker is None:
-                    continue
-
-                convtype = maker(clsname, function_ctx.args, function_ctx.api)
-                if convtype:
-                    self.log(f"Converting a field {deftype} into type {convtype} "
-                             f"for {scopecls.fullname()}")
-                    return convtype
-
-            # For unknown fields, just return ANY
-            self.log(f"Unknown field {deftype} in interface {scopecls.fullname()}")
-            return AnyType(TypeOfAny.implementation_artifact,
-                           line=deftype.line, column=deftype.column)
+            return deftype
 
         return analyze
 
@@ -286,6 +259,53 @@ class ZopeInterfacePlugin(Plugin):
             return analyze_interface_base
 
         return analyze
+
+    def _is_subclass(self, typ: Type, classname: str) -> bool:
+        if not isinstance(typ, Instance):
+            return False
+
+        parent_names = [t.fullname() for t in typ.type.mro]
+        return classname in parent_names
+
+    def _get_schema_field_type(self, typ: Type, args: List[List[Expression]],
+                               api: CheckerPluginInterface) -> Type:
+        """Given subclass of zope.interface.Attribute, determine python
+        type that would correspond to it.
+        """
+        # If we are not processing an interface, leave the type as is
+        assert isinstance(api, TypeChecker)
+        scopecls = api.scope.active_class()
+        if scopecls is None:
+            return typ
+
+        if not self._is_interface(scopecls):
+            return typ
+
+        # If default type is a zope.schema.Field, we should convert it to a
+        # python type
+        if not isinstance(typ, Instance):
+            return typ
+
+        parent_names = [t.fullname() for t in typ.type.mro]
+        if 'zope.interface.Attribute' not in parent_names:
+            return typ
+
+        # If it is a konwn field, build a python type out of it
+        for clsname in parent_names:
+            maker = FIELD_TO_TYPE_MAKER.get(clsname)
+            if maker is None:
+                continue
+
+            convtype = maker(clsname, args, api)
+            if convtype:
+                self.log(f"Converting a field {typ} into type {convtype} "
+                         f"for {scopecls.fullname()}")
+                return convtype
+
+        # For unknown fields, just return ANY
+        self.log(f"Unknown field {typ} in interface {scopecls.fullname()}")
+        return AnyType(TypeOfAny.implementation_artifact,
+                       line=typ.line, column=typ.column)
 
     def _analyze_implementation(self, cls: ClassDef, iface_exprs: List[str],
                                 api: SemanticAnalyzerPluginInterface) -> None:
