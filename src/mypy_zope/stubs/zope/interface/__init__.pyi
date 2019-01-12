@@ -1,6 +1,11 @@
 from typing import Type, Any
 
-class Interface:
+class InterfaceType(type):
+    def __getitem__(self, key, default=None):
+        pass
+    ...
+
+class Interface(metaclass=InterfaceType):
     ...
 
 class implementer(object):

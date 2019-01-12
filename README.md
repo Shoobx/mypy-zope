@@ -72,6 +72,24 @@ getting the type `int` in the example above. That means mypy will report an
 error if you try to assign string to that attribute on an instance of a `Cow`
 class. Custom fields or fields not recognized by plugin are given type `Any`.
 
+### Field properties
+
+Support for `zope.schema.FieldProperty` is limited, because type information is
+not transferred from an interface to implementation attribute, but mypy doesn't
+report errors on sources like this:
+
+```python
+class IAnimal(zope.interface.Interface):
+    number_of_legs = zope.schema.Int(title="Number of legs")
+
+@zope.interface.implementer(IAnimal)
+class Cow(object):
+    number_of_legs = zope.schema.FieldProperty(IAnimal['number_of_legs'])
+```
+
+The type of `Cow.number_of_legs` will become `Any` in this case, even though
+`IAnimal.number_of_legs` would be inferred as `int`.
+
 ### Adaptation pattern
 
 Zope interfaces can be "called" to lookup an adapter, like this:
