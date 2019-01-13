@@ -15,7 +15,8 @@ from mypy.plugin import (
     AnalyzeTypeContext, FunctionContext, MethodContext, AttributeContext,
     ClassDefContext, SymbolTableNode
 )
-from mypy.semanal import SemanticAnalyzerPass2, merge
+from mypy.semanal import SemanticAnalyzerPass2
+from mypy.mro import merge
 from mypy.options import Options
 
 from mypy.nodes import (

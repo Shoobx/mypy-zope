@@ -3,7 +3,7 @@ language: python
 python:
   - "3.6"
 install:
-  - pip install --upgrade -e .[test]
+  - pip install --process-dependency-links --upgrade -e .[test]
   - pip install coveralls
 script:
   - pytest -v --cov src/mypy_zope

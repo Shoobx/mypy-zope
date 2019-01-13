@@ -9,7 +9,7 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     install_requires = [
-        'mypy',
+        'mypy==0.660',
         'zope-interface',
         'zope-schema'
     ],
@@ -18,6 +18,9 @@ setup(
         "pytest-cov",
         "lxml"
     ]},
+    dependency_links=[
+        "git+https://github.com/python/mypy.git@release-0.660#egg=mypy-0.660"
+    ],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
