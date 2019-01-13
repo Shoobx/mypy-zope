@@ -14,6 +14,10 @@ class IBookmark(zope.interface.Interface):
         title='Title',
         description='Explicitly required text line',
         required=True)
+    asciiline = zope.schema.ASCIILine(
+        title='Title',
+        description='ASCII-only text line',
+        required=False)
 
 
 @zope.interface.implementer(IBookmark)
@@ -25,14 +29,16 @@ def main() -> None:
     bm.textline = 343  # Error, expected to be string
     bm.reqtextline = None  # Error, it is required
     bm.expreqtextline = None  # Error, it is required
+    bm.asciiline = True  # Error, it is a string
 
 if __name__ == '__main__':
     main()
 
 """
 <output>
-schema_text.py:25: error: Incompatible types in assignment (expression has type "int", variable has type "Optional[str]")
-schema_text.py:26: error: Incompatible types in assignment (expression has type "None", variable has type "str")
-schema_text.py:27: error: Incompatible types in assignment (expression has type "None", variable has type "str")
+schema_text.py:29: error: Incompatible types in assignment (expression has type "int", variable has type "Optional[str]")
+schema_text.py:30: error: Incompatible types in assignment (expression has type "None", variable has type "str")
+schema_text.py:31: error: Incompatible types in assignment (expression has type "None", variable has type "str")
+schema_text.py:32: error: Incompatible types in assignment (expression has type "bool", variable has type "Optional[str]")
 </output>
 """

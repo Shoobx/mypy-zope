@@ -17,7 +17,7 @@ class Bytes(MinMaxLen, Field):
     def fromUnicode(self, value: Any): ...
     def fromBytes(self, value: Any): ...
 
-class NativeString:
+class NativeString(Text):
     def fromBytes(self, value: Any): ...
 
 class ASCII(NativeString):
@@ -26,7 +26,7 @@ class ASCII(NativeString):
 class BytesLine(Bytes):
     def constraint(self, value: Any): ...
 
-class NativeStringLine:
+class NativeStringLine(TextLine):
     def fromBytes(self, value: Any): ...
 
 class ASCIILine(ASCII):
