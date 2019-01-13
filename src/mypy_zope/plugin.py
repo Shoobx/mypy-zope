@@ -16,7 +16,7 @@ from mypy.plugin import (
     ClassDefContext, SymbolTableNode
 )
 from mypy.semanal import SemanticAnalyzerPass2
-from mypy.mro import merge
+from mypy.mro import merge, MroError
 from mypy.options import Options
 
 from mypy.nodes import (
@@ -329,7 +329,13 @@ class ZopeInterfacePlugin(Plugin):
             self.log(f"Adding {iface_expr} to MRO of {info.fullname()}")
             seqs.append(cast(TypeInfo, stn.node).mro)
 
-        info.mro = merge(seqs)
+        try:
+            info.mro = merge(seqs)
+        except MroError:
+            hierarchies = [[i.fullname() for i in s] for s in seqs]
+            api.fail(f"Unable to calculate a consistent MRO: cannot merge class hierarchies:", info)
+            for h in hierarchies:
+                api.fail(f"  -> {h}", info)
 
         # XXX: Reuse abstract status checker from SemanticAnalyzerPass2.
         # Ideally, implement a dedicated interface verifier.
