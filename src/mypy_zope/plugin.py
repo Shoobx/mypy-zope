@@ -301,24 +301,6 @@ class ZopeInterfacePlugin(Plugin):
     def _analyze_implementation(self, cls: ClassDef, iface_exprs: List[str],
                                 api: SemanticAnalyzerPluginInterface) -> None:
         info = cls.info
-        # Find a suitable __init__ method
-        init_method = info.get_method('__init__')
-        assert init_method is not None
-        if init_method.info.fullname() == 'builtins.object':
-            # No __init__ defined for class or its base classes. We are going
-            # to insert interface class hierarchies into MRO, which will
-            # introduce "adaptation" __init__ method. We need to preserve the
-            # ability to instantiate implementation without parameters.
-            assert init_method.type is not None
-            assert isinstance(init_method.type, CallableType)
-            newinit_type = init_method.type \
-                .copy_modified(arg_types=[Instance(info, [])]) \
-                .with_name(f"{init_method.name()} of {info.name()}")
-            # Horrible hack to prevent abstract method instantiation error
-            newinit = FuncDef(init_method.name(), [], Block([]), newinit_type)
-            newinit.info = info
-            info.names['__init__'] = SymbolTableNode(MDEF, newinit,
-                                                     plugin_generated=True)
 
         # Make inteface a superclass of implementation
         seqs = [info.mro]
@@ -327,7 +309,14 @@ class ZopeInterfacePlugin(Plugin):
             if stn is None:
                 continue
             self.log(f"Adding {iface_expr} to MRO of {info.fullname()}")
-            seqs.append(cast(TypeInfo, stn.node).mro)
+            iface_mro = cast(TypeInfo, stn.node).mro
+            # We always want 'object' base class to go before any interface in
+            # the MRO. This is because Interface defines its special
+            # constructor to support adapter pattern (IInterface(context)). We
+            # have to make sure default constructor for implementation still
+            # come from `object`.
+            iface_mro = [info for info in iface_mro if info.fullname() != 'builtins.object']
+            seqs.append(iface_mro)
 
         try:
             info.mro = merge(seqs)
