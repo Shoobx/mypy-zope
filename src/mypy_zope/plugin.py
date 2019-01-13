@@ -44,20 +44,20 @@ def make_simple_type(fieldtype: str,
 
 
 FIELD_TO_TYPE_MAKER = {
-    'zope.schema.Text': make_simple_type,
-    'zope.schema.Bool': make_simple_type,
-    'zope.schema.Complex': make_simple_type,
-    'zope.schema.Real': make_simple_type,
-    'zope.schema.Int': make_simple_type,
+    'zope.schema._bootstrapfields.Text': make_simple_type,
+    'zope.schema._bootstrapfields.Bool': make_simple_type,
+    'zope.schema._bootstrapfields.Complex': make_simple_type,
+    'zope.schema._bootstrapfields.Real': make_simple_type,
+    'zope.schema._bootstrapfields.Int': make_simple_type,
 
 }
 
 SIMPLE_FIELD_TO_TYPE = {
-    'zope.schema.Text': 'str',
-    'zope.schema.Bool': 'bool',
-    'zope.schema.Complex': 'complex',
-    'zope.schema.Real': 'float',
-    'zope.schema.Int': 'int',
+    'zope.schema._bootstrapfields.Text': 'str',
+    'zope.schema._bootstrapfields.Bool': 'bool',
+    'zope.schema._bootstrapfields.Complex': 'complex',
+    'zope.schema._bootstrapfields.Real': 'float',
+    'zope.schema._bootstrapfields.Int': 'int',
 }
 
 
