@@ -85,7 +85,7 @@ class ZopeInterfacePlugin(Plugin):
             api = function_ctx.api
             deftype = function_ctx.default_return_type
 
-            if self._is_subclass(deftype, 'zope.interface.Attribute'):
+            if self._is_subclass(deftype, 'zope.interface.interface.Attribute'):
                 return self._get_schema_field_type(
                     deftype, function_ctx.arg_names, function_ctx.args, api)
             if self._is_subclass(deftype, 'zope.schema.fieldproperty.FieldProperty'):
@@ -154,7 +154,7 @@ class ZopeInterfacePlugin(Plugin):
             for iface_arg in decor.args:
                 apply_interface(iface_arg, classdef_ctx.cls.info, api)
 
-        if fullname=='zope.interface.implementer':
+        if fullname=='zope.interface.declarations.implementer':
             return analyze
         return None
 
@@ -191,7 +191,7 @@ class ZopeInterfacePlugin(Plugin):
                 cls_md = self._get_metadata(cls_info)
                 cls_md['is_interface'] = True
 
-        if fullname == 'zope.interface.Interface':
+        if fullname == 'zope.interface.interface.Interface':
             return analyze_direct
 
         return analyze_subinterface
@@ -233,7 +233,7 @@ class ZopeInterfacePlugin(Plugin):
 
             # If we are dealing with an interface, massage it a bit, e.g.
             # inject `self` argument to all methods
-            directiface = 'zope.interface.Interface' in [b.type.fullname() for b in info.bases]
+            directiface = 'zope.interface.interface.Interface' in [b.type.fullname() for b in info.bases]
             subinterface = any(self._is_interface(b.type) for b in info.bases)
             if directiface or subinterface:
                 self._analyze_zope_interface(classdef_ctx.cls)
@@ -246,7 +246,7 @@ class ZopeInterfacePlugin(Plugin):
                 self._analyze_implementation(classdef_ctx.cls, iface_exprs, classdef_ctx.api)
                 return
 
-        if fullname == 'zope.interface.Interface':
+        if fullname == 'zope.interface.interface.Interface':
             return analyze_interface_base
 
         return analyze

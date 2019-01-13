@@ -30,7 +30,7 @@ if __name__ == '__main__':
 """
 <output>
 bad_mro.py:19: error: Unable to calculate a consistent MRO: cannot merge class hierarchies:
-bad_mro.py:19: error:   -> ['__main__.Crocodile', '__main__.Reptilia', '__main__.Swimmable', '__main__.ISwimmable', '__main__.IReptilia', '__main__.ICreature', 'zope.interface.Interface', 'builtins.object']
-bad_mro.py:19: error:   -> ['__main__.ICrocodile', '__main__.ICreature', '__main__.ISwimmable', 'zope.interface.Interface', 'builtins.object']
+bad_mro.py:19: error:   -> ['__main__.Crocodile', '__main__.Reptilia', '__main__.Swimmable', '__main__.ISwimmable', '__main__.IReptilia', '__main__.ICreature', 'zope.interface.interface.Interface', 'builtins.object']
+bad_mro.py:19: error:   -> ['__main__.ICrocodile', '__main__.ICreature', '__main__.ISwimmable', 'zope.interface.interface.Interface', 'builtins.object']
 </output>
 """
