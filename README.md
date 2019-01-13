@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/Shoobx/mypy-zope.svg?branch=master)](https://travis-ci.org/Shoobx/mypy-zope)
 [![Coverage Status](https://coveralls.io/repos/github/Shoobx/mypy-zope/badge.svg)](https://coveralls.io/github/Shoobx/mypy-zope)
+[![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 
 The goal is to be able to make zope interfaces to be treated as types in mypy
 sense.
