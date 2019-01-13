@@ -24,33 +24,22 @@ from mypy.nodes import (
     MDEF, ARG_POS, ARG_OPT
 )
 
-ZOPE_FIELD_DEFAULT_PARAM_NUM = 3
 
-
-def _make_optional(required_arg: List[Expression], typ: Type) -> Type:
-    # Optionally make type optional
-    if not required_arg:
-        # Required arg is not provided, assume True
-        return typ
-    # Check if required_arg represents 'False' (it is "True" by default)
-    if not is_false_literal(required_arg[0]):
-        return typ
-
-    # Field is explicitly marked as non-required, make it "Optional"
-    nonetyp = NoneTyp()
-    uniontyp = UnionType([typ, nonetyp])
-    return uniontyp
-
-
-def make_simple_type(fieldtype: str, args: List[List[Expression]],
+def make_simple_type(fieldtype: str,
+                     arg_names: List[List[Optional[str]]],
+                     args: List[List[Expression]],
                      api: CheckerPluginInterface) -> Optional[Type]:
     typename = SIMPLE_FIELD_TO_TYPE.get(fieldtype)
     if not typename:
         return None
     stdtype = api.named_generic_type(typename, [])
-    if len(args) -1 < ZOPE_FIELD_DEFAULT_PARAM_NUM:
-        return stdtype
-    return _make_optional(args[ZOPE_FIELD_DEFAULT_PARAM_NUM], stdtype)
+    for nameset, argset in zip(arg_names, args):
+        for name, arg in zip(nameset, argset):
+            if name == 'required' and is_false_literal(arg):
+                nonetype = NoneTyp()
+                optionaltype = UnionType([stdtype, nonetype])
+                return optionaltype
+    return stdtype
 
 
 FIELD_TO_TYPE_MAKER = {
@@ -96,7 +85,8 @@ class ZopeInterfacePlugin(Plugin):
             deftype = function_ctx.default_return_type
 
             if self._is_subclass(deftype, 'zope.interface.Attribute'):
-                return self._get_schema_field_type(deftype, function_ctx.args, api)
+                return self._get_schema_field_type(
+                    deftype, function_ctx.arg_names, function_ctx.args, api)
             if self._is_subclass(deftype, 'zope.schema.fieldproperty.FieldProperty'):
                 # We cannot accurately determine the type, fallback to Any
                 return AnyType(TypeOfAny.implementation_artifact)
@@ -267,7 +257,9 @@ class ZopeInterfacePlugin(Plugin):
         parent_names = [t.fullname() for t in typ.type.mro]
         return classname in parent_names
 
-    def _get_schema_field_type(self, typ: Type, args: List[List[Expression]],
+    def _get_schema_field_type(self, typ: Type,
+                               arg_names: List[List[Optional[str]]],
+                               args: List[List[Expression]],
                                api: CheckerPluginInterface) -> Type:
         """Given subclass of zope.interface.Attribute, determine python
         type that would correspond to it.
@@ -287,8 +279,6 @@ class ZopeInterfacePlugin(Plugin):
             return typ
 
         parent_names = [t.fullname() for t in typ.type.mro]
-        if 'zope.interface.Attribute' not in parent_names:
-            return typ
 
         # If it is a konwn field, build a python type out of it
         for clsname in parent_names:
@@ -296,7 +286,7 @@ class ZopeInterfacePlugin(Plugin):
             if maker is None:
                 continue
 
-            convtype = maker(clsname, args, api)
+            convtype = maker(clsname, arg_names, args, api)
             if convtype:
                 self.log(f"Converting a field {typ} into type {convtype} "
                          f"for {scopecls.fullname()}")
