@@ -21,7 +21,7 @@ from mypy.options import Options
 
 from mypy.nodes import (
     Decorator, Var, Argument, FuncDef, CallExpr, RefExpr, Expression,
-    ClassDef, Statement, Block,
+    ClassDef, Statement, Block, IndexExpr,
     MDEF, ARG_POS, ARG_OPT
 )
 
@@ -173,11 +173,17 @@ class ZopeInterfacePlugin(Plugin):
 
         def analyze_subinterface(classdef_ctx: ClassDefContext) -> None:
             # If one of the bases is an interface, this is also an interface
-            if not isinstance(classdef_ctx.reason, RefExpr):
+            if isinstance(classdef_ctx.reason, IndexExpr):
+                # Generic parameterised interface
+                reason = classdef_ctx.reason.base
+            else:
+                reason = classdef_ctx.reason
+            if not isinstance(reason, RefExpr):
                 return
             cls_info = classdef_ctx.cls.info
+
             api = classdef_ctx.api
-            base_name = classdef_ctx.reason.fullname
+            base_name = reason.fullname
             if not base_name:
                 return
             base_node = api.lookup_fully_qualified_or_none(base_name)
