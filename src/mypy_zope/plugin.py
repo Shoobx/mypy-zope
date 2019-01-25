@@ -339,6 +339,12 @@ class ZopeInterfacePlugin(Plugin):
 
     def _analyze_zope_interface(self, cls: ClassDef) -> None:
         self.log(f"Adjusting zope interface: {cls.info.fullname()}")
+        md = self._get_metadata(cls.info)
+        # Even though interface is abstract, we mark it as non-abstract to
+        # allow adaptation pattern: IInterface(context)
+        cls.info.is_abstract = False
+        if md.get('interface_analyzed', False):
+            return
 
         for idx, item in enumerate(cls.defs.body):
             if not isinstance(item, FuncDef):
@@ -347,9 +353,7 @@ class ZopeInterfacePlugin(Plugin):
             replacement = self._adjust_interface_function(cls.info, item)
             cls.defs.body[idx] = replacement
 
-        # Even though interface is abstract, we mark it as non-abstract to
-        # allow adaptation pattern: IInterface(context)
-        cls.info.is_abstract = False
+        md['interface_analyzed'] = True
 
     def _get_metadata(self, typeinfo: TypeInfo) -> Dict[str, Any]:
         if 'zope' not in typeinfo.metadata:
@@ -376,6 +380,9 @@ class ZopeInterfacePlugin(Plugin):
         func_def.arguments.insert(0, selfarg)
 
         func_def.is_abstract = True
+        if func_def.name() in ('__getattr__', '__getattribute__'):
+            # These special methods cannot be decorated. Likely a mypy bug.
+            return func_def
         func_def.is_decorated = True
         var = Var(func_def.name(), func_def.type)
         var.is_initialized_in_class=True
