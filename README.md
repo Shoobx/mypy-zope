@@ -112,6 +112,17 @@ Type of the `adapter` variable will be set to `IEUPowerSocket`.
 `zope.schema` packages. They are enabled automatically as soon as plugin is
 enabled.
 
+### Conditional type inference
+
+When using `zope.interface`'s `implementedBy()` and `providedBy()` methods
+in an if statement, `mypy` will know which type it is inside those statements.
+
+```python
+if IAnimal.providedBy(ob):
+    ob.number_of_legs += 2
+
+```
+
 ## What is not supported?
 
 These `zope.interface` features are not supported:
