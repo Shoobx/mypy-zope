@@ -21,7 +21,7 @@ from mypy.options import Options
 
 from mypy.nodes import (
     Decorator, Var, Argument, FuncDef, CallExpr, RefExpr, Expression,
-    ClassDef, Statement, Block, IndexExpr,
+    ClassDef, Statement, Block, IndexExpr, MemberExpr,
     MDEF, ARG_POS, ARG_OPT
 )
 
@@ -104,6 +104,21 @@ class ZopeInterfacePlugin(Plugin):
     def get_method_hook(self, fullname: str
                         ) -> Optional[Callable[[MethodContext], Type]]:
         # print(f"get_method_hook: {fullname}")
+
+        methodname = fullname.split('.')[-1]
+        if methodname in ('providedBy', 'implementedBy'):
+            def analyze(method_ctx: MethodContext) -> Type:
+                assert isinstance(method_ctx.context, CallExpr)
+                assert isinstance(method_ctx.context.callee, MemberExpr)
+                if method_ctx.context.callee.name == 'providedBy':
+                    method_ctx.context.callee.fullname = 'builtins.isinstance'
+                else:
+                    method_ctx.context.callee.fullname = 'builtins.issubclass'
+                method_ctx.context.args = [method_ctx.args[0][0],
+                                           method_ctx.context.callee.expr]
+
+                return method_ctx.default_return_type
+            return analyze
         return None
 
     def get_attribute_hook(self, fullname: str
