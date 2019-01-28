@@ -62,10 +62,6 @@ SIMPLE_FIELD_TO_TYPE = {
 
 
 class ZopeInterfacePlugin(Plugin):
-    def __init__(self, options: Options) -> None:
-        here = os.path.dirname(__file__)
-        options.mypy_path.append(os.path.join(here, 'stubs'))
-        super(ZopeInterfacePlugin, self).__init__(options)
 
     def log(self, msg: str) -> None:
         if self.options.verbosity  >=1:
