@@ -10,8 +10,8 @@ setup(
     package_dir={'': 'src'},
     install_requires = [
         'mypy==0.660',
-        'zope-interface',
-        'zope-schema'
+        'zope.interface',
+        'zope.schema'
     ],
     extras_require={'test': [
         "pytest>=4.0.0,<4.1.0",
