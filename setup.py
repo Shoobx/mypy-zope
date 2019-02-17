@@ -9,7 +9,7 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     install_requires = [
-        'mypy==0.660',
+        'mypy>=0.660',
         'zope.interface',
         'zope.schema'
     ],
