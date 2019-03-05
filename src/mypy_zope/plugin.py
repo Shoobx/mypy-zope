@@ -257,7 +257,7 @@ class ZopeInterfacePlugin(Plugin):
             directiface = 'zope.interface.interface.Interface' in [b.type.fullname() for b in info.bases]
             subinterface = any(self._is_interface(b.type) for b in info.bases)
             if directiface or subinterface:
-                self._analyze_zope_interface(classdef_ctx.cls)
+                self._analyze_zope_interface(classdef_ctx.api, classdef_ctx.cls)
                 return
 
             # Are we customizing interface implementation instead?
@@ -352,7 +352,10 @@ class ZopeInterfacePlugin(Plugin):
         api = cast(SemanticAnalyzerPass2, api)
         api.calculate_abstract_status(info)
 
-    def _analyze_zope_interface(self, cls: ClassDef) -> None:
+    def _analyze_zope_interface(
+            self,
+            api: SemanticAnalyzerPluginInterface,
+            cls: ClassDef) -> None:
         self.log(f"Adjusting zope interface: {cls.info.fullname()}")
         md = self._get_metadata(cls.info)
         # Even though interface is abstract, we mark it as non-abstract to
@@ -365,7 +368,7 @@ class ZopeInterfacePlugin(Plugin):
             if not isinstance(item, FuncDef):
                 continue
 
-            replacement = self._adjust_interface_function(cls.info, item)
+            replacement = self._adjust_interface_function(api, cls.info, item)
             cls.defs.body[idx] = replacement
 
         md['interface_analyzed'] = True
@@ -379,20 +382,29 @@ class ZopeInterfacePlugin(Plugin):
         md = self._get_metadata(typeinfo)
         return md.get('is_interface', False)
 
-    def _adjust_interface_function(self, class_info: TypeInfo,
-                                   func_def: FuncDef) -> Statement:
-        selftype = Instance(class_info, [],
-                            line=class_info.line,
-                            column=class_info.column)
-        selfarg = Argument(Var('self', None), selftype, None, ARG_POS)
+    def _adjust_interface_function(
+            self,
+            api: SemanticAnalyzerPluginInterface,
+            class_info: TypeInfo,
+            func_def: FuncDef) -> Statement:
 
-        if isinstance(func_def.type, CallableType):
-            func_def.type.arg_names.insert(0, 'self')
-            func_def.type.arg_kinds.insert(0, ARG_POS)
-            func_def.type.arg_types.insert(0, selftype)
-        func_def.arg_names.insert(0, 'self')
-        func_def.arg_kinds.insert(0, ARG_POS)
-        func_def.arguments.insert(0, selfarg)
+        if func_def.arg_names and func_def.arg_names[0] == 'self':
+            # reveal the common mistake of leaving "self" arguments in the
+            # interface
+            api.fail("Interface methods should not have 'self' argument", func_def)
+        else:
+            selftype = Instance(class_info, [],
+                                line=class_info.line,
+                                column=class_info.column)
+            selfarg = Argument(Var('self', None), selftype, None, ARG_POS)
+
+            if isinstance(func_def.type, CallableType):
+                func_def.type.arg_names.insert(0, 'self')
+                func_def.type.arg_kinds.insert(0, ARG_POS)
+                func_def.type.arg_types.insert(0, selftype)
+            func_def.arg_names.insert(0, 'self')
+            func_def.arg_kinds.insert(0, ARG_POS)
+            func_def.arguments.insert(0, selfarg)
 
         func_def.is_abstract = True
         if func_def.name() in ('__getattr__', '__getattribute__'):
