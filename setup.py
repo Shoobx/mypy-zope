@@ -12,7 +12,7 @@ For feature description and usage instructions, see https://github.com/Shoobx
 
 setup(
     name="mypy-zope",
-    version="0.1.2",
+    version="0.1.3",
     author="Andrey Lebedev",
     author_email="andrey.lebedev@gmail.com",
     long_description=long_description,
