@@ -6,8 +6,8 @@ long_description = """
 The goal is to be able to make zope interfaces to be treated as types in mypy
 sense.
 
-For feature description and usage instructions, see https://github.com/Shoobx
-/mypy-zope.
+For feature description and usage instructions, see
+https://github.com/Shoobx/mypy-zope.
 """
 
 setup(
