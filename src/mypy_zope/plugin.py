@@ -134,7 +134,7 @@ class ZopeInterfacePlugin(Plugin):
                 return
             iface_name = iface_arg.fullname
             if iface_name is None:
-                api.fail("Interface should be specified (should never happen)", iface_arg)
+                # unknown interface, probably from stubless package
                 return
 
             iface_type = iface_arg.node
@@ -145,7 +145,11 @@ class ZopeInterfacePlugin(Plugin):
                 return
 
             if not self._is_interface(iface_type):
-                api.fail(f"zope.interface.implementer accepts interface (not {iface_name})", iface_arg)
+                api.fail(f"zope.interface.implementer accepts interface, "
+                         f"not {iface_name}.", iface_arg)
+                api.fail(f"Make sure you have stubs for all packages that "
+                         f"provide interfaces for {iface_name} "
+                         f"class hierarchy.", iface_arg)
                 return
 
             # print("CLASS INFO", class_info)
