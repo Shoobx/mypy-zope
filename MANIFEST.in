@@ -1,5 +1,5 @@
 include LICENSE
 graft tests
-graft src/mypy_zope/stubs
+graft src/zope-stubs
 global-exclude __pycache__
 global-exclude *.py[co]

@@ -11,8 +11,7 @@ sense.
 
 Install both mypy and mypy-zope:
 ```sh
-pip install mypy
-pip install git+https://github.com/Shoobx/mypy-zope.git
+pip install mypy-zope
 ```
 
 Edit `mypy.ini` file in your project to enable the plugin:

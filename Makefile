@@ -14,5 +14,5 @@ test:
 # Mypy self-test
 .PHONY: mypy
 mypy:
-	$(VEBIN)/mypy src --strict --html-report reports/html --txt-report reports/txt
+	$(VEBIN)/mypy src/mypy_zope --strict --html-report reports/html --txt-report reports/txt
 	cat reports/txt/index.txt

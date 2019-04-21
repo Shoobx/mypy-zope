@@ -488,35 +488,5 @@ class ZopeInterfacePlugin(Plugin):
         return decor
 
 
-# HACK: we want to inject zope stub path into mypy search path. Unfortunately
-# there is no legal way for plugins to do that ATM, so we resort to
-# monkeypatching.
-from mypy import build
-from mypy.modulefinder import SearchPaths
-
-
-class MypyZopeBuildManager(build.BuildManager):
-    def __init__(
-        self, data_dir: str, search_paths: SearchPaths, *args: Any, **kwargs: Any
-    ) -> None:
-        here = os.path.dirname(__file__)
-        zope_search_paths = SearchPaths(
-            python_path=search_paths.python_path,
-            mypy_path=search_paths.mypy_path,
-            package_path=search_paths.package_path,
-            typeshed_path=search_paths.typeshed_path + (os.path.join(here, "stubs"),),
-        )
-        super(MypyZopeBuildManager, self).__init__(
-            data_dir, zope_search_paths, *args, **kwargs
-        )
-
-
-def monkey_patch_build_manager() -> None:
-    build.BuildManager = MypyZopeBuildManager  # type: ignore
-
-
 def plugin(version: str) -> PyType[Plugin]:
-    # TODO: Submit a patch for mypy to allow customization of search paths for
-    # plugins and remove monkeypatching
-    monkey_patch_build_manager()
     return ZopeInterfacePlugin
