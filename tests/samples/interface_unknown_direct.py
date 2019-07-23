@@ -19,6 +19,6 @@ def main() -> None:
 <output>
 interface_unknown_direct.py:7: error: Cannot find module named 'unknown.interfaces'
 interface_unknown_direct.py:7: note: See https://mypy.readthedocs.io/en/latest/running_mypy.html#missing-imports
-interface_unknown_direct.py:15: error: Revealed type is 'Any'
+interface_unknown_direct.py:15: note: Revealed type is 'Any'
 </output>
 """

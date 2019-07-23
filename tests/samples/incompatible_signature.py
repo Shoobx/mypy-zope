@@ -29,6 +29,6 @@ if __name__ == '__main__':
 
 """
 <output>
-incompatible_signature.py:14: error: Argument 2 of "hello" incompatible with supertype "ISomething"
+incompatible_signature.py:14: error: Argument 2 of "hello" is incompatible with supertype "ISomething"; supertype defines the argument type as "str"
 </output>
 """

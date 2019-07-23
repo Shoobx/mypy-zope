@@ -28,7 +28,7 @@ FieldProperty cannot find out the type of the field, unfortunately, so
 types of all FieldProeprties are Any. Maybe this will get fixed some day.
 
 <output>
-interface_fieldproperty.py:18: error: Revealed type is 'Any'
-interface_fieldproperty.py:19: error: Revealed type is 'builtins.str'
+interface_fieldproperty.py:18: note: Revealed type is 'Any'
+interface_fieldproperty.py:19: note: Revealed type is 'builtins.str'
 </output>
 """
