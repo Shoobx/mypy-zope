@@ -20,6 +20,6 @@ def main(self) -> None:
 
 """
 <output>
-interface_meta.py:19: error: Revealed type is '__main__.IBookmark*'
+interface_meta.py:19: note: Revealed type is '__main__.IBookmark*'
 </output>
 """

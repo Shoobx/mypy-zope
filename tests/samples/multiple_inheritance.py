@@ -32,6 +32,6 @@ if __name__ == '__main__':
 
 """
 <output>
-multiple_inheritance.py:28: error: Revealed type is 'def (self: __main__.Boots, color: builtins.str)'
+multiple_inheritance.py:28: note: Revealed type is 'def (self: __main__.Boots, color: builtins.str)'
 </output>
 """
