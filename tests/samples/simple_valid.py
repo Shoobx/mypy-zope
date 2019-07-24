@@ -1,5 +1,6 @@
 """A simple valid interface declaration
 """
+
 import zope.interface
 
 

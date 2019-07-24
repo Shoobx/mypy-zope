@@ -1,4 +1,3 @@
-import os
 import sys
 from typing import List, Dict, Any, Callable, Optional
 from typing import Type as PyType
@@ -12,6 +11,7 @@ from mypy.types import (
     NoneTyp,
     AnyType,
     TypeOfAny,
+    PartialType,
 )
 from mypy.checker import TypeChecker, is_false_literal
 from mypy.nodes import TypeInfo
@@ -25,14 +25,11 @@ from mypy.plugin import (
     MethodContext,
     AttributeContext,
     ClassDefContext,
-    SymbolTableNode,
 )
-from mypy.semanal import SemanticAnalyzerPass2
-from mypy.mro import merge, MroError
-from mypy.options import Options
+from mypy.subtypes import find_member, is_subtype
 
 from mypy.nodes import (
-    Decorator,
+    Context,
     Var,
     Argument,
     FuncDef,
@@ -44,9 +41,12 @@ from mypy.nodes import (
     Block,
     IndexExpr,
     MemberExpr,
+    SymbolTable,
+    SymbolTableNode,
     MDEF,
     ARG_POS,
     ARG_OPT,
+    FUNC_NO_INFO,
 )
 
 
@@ -148,6 +148,31 @@ class ZopeInterfacePlugin(Plugin):
                 return method_ctx.default_return_type
 
             return analyze
+
+        def analyze_implementation(method_ctx: MethodContext) -> Type:
+            deftype = method_ctx.default_return_type
+            if not isinstance(method_ctx.context, ClassDef):
+                return deftype
+
+            impl_info = method_ctx.context.info
+            if impl_info is FUNC_NO_INFO:
+                return deftype
+
+            impl_type = Instance(impl_info, [])
+            md = self._get_metadata(impl_info)
+            ifaces = cast(List[str], md.get("implements", []))
+            for ifacename in ifaces:
+                # iface_type = method_ctx.api.named_generic_type(ifacename, [])
+                assert isinstance(method_ctx.api, TypeChecker)
+                iface_type = self._lookup_type(ifacename, method_ctx.api)
+                self._report_implementation_problems(
+                    impl_type, iface_type, method_ctx.api, method_ctx.context
+                )
+            return deftype
+
+        if fullname == "zope.interface.declarations.implementer.__call__":
+            return analyze_implementation
+
         return None
 
     def get_attribute_hook(
@@ -165,6 +190,7 @@ class ZopeInterfacePlugin(Plugin):
             iface_arg: Expression,
             class_info: TypeInfo,
             api: SemanticAnalyzerPluginInterface,
+            context: Context,
         ) -> None:
             if not isinstance(iface_arg, RefExpr):
                 api.fail(
@@ -206,7 +232,12 @@ class ZopeInterfacePlugin(Plugin):
                 f"Found implementation of "
                 f"{iface_type.fullname()}: {class_info.fullname()}"
             )
-            class_info.mro.append(iface_type)
+
+            # Make sure implementation is treates subtype of an interface. Pretend
+            # there is a decorator for the class that will create a "type promotion"
+            faketi = TypeInfo(SymbolTable(), iface_type.defn, iface_type.module_name)
+            faketi._promote = Instance(iface_type, [])
+            class_info.mro.append(faketi)
 
         def analyze(classdef_ctx: ClassDefContext) -> None:
             api = classdef_ctx.api
@@ -214,7 +245,7 @@ class ZopeInterfacePlugin(Plugin):
             decor = cast(CallExpr, classdef_ctx.reason)
 
             for iface_arg in decor.args:
-                apply_interface(iface_arg, classdef_ctx.cls.info, api)
+                apply_interface(iface_arg, classdef_ctx.cls.info, api, decor)
 
         if fullname == "zope.interface.declarations.implementer":
             return analyze
@@ -310,16 +341,6 @@ class ZopeInterfacePlugin(Plugin):
             subinterface = any(self._is_interface(b.type) for b in info.bases)
             if directiface or subinterface:
                 self._analyze_zope_interface(classdef_ctx.api, classdef_ctx.cls)
-                return
-
-            # Are we customizing interface implementation instead?
-            md = self._get_metadata(info)
-            iface_exprs = cast(List[str], md.get("implements"))
-            if iface_exprs:
-                self._analyze_implementation(
-                    classdef_ctx.cls, iface_exprs, classdef_ctx.api
-                )
-                return
 
         if fullname == "zope.interface.interface.Interface":
             return analyze_interface_base
@@ -379,48 +400,6 @@ class ZopeInterfacePlugin(Plugin):
             TypeOfAny.implementation_artifact, line=typ.line, column=typ.column
         )
 
-    def _analyze_implementation(
-        self,
-        cls: ClassDef,
-        iface_exprs: List[str],
-        api: SemanticAnalyzerPluginInterface,
-    ) -> None:
-        info = cls.info
-
-        # Make inteface a superclass of implementation
-        seqs = [info.mro]
-        for iface_expr in iface_exprs:
-            stn = api.lookup_fully_qualified_or_none(iface_expr)
-            if stn is None:
-                continue
-            self.log(f"Adding {iface_expr} to MRO of {info.fullname()}")
-            iface_mro = cast(TypeInfo, stn.node).mro
-            # We always want 'object' base class to go before any interface in
-            # the MRO. This is because Interface defines its special
-            # constructor to support adapter pattern (IInterface(context)). We
-            # have to make sure default constructor for implementation still
-            # come from `object`.
-            iface_mro = [
-                info for info in iface_mro if info.fullname() != "builtins.object"
-            ]
-            seqs.append(iface_mro)
-
-        try:
-            info.mro = merge(seqs)
-        except MroError:
-            hierarchies = [[i.fullname() for i in s] for s in seqs]
-            api.fail(
-                f"Unable to calculate a consistent MRO: cannot merge class hierarchies:",
-                info,
-            )
-            for h in hierarchies:
-                api.fail(f"  -> {h}", info)
-
-        # XXX: Reuse abstract status checker from SemanticAnalyzerPass2.
-        # Ideally, implement a dedicated interface verifier.
-        api = cast(SemanticAnalyzerPass2, api)
-        api.calculate_abstract_status(info)
-
     def _analyze_zope_interface(
         self, api: SemanticAnalyzerPluginInterface, cls: ClassDef
     ) -> None:
@@ -428,7 +407,6 @@ class ZopeInterfacePlugin(Plugin):
         md = self._get_metadata(cls.info)
         # Even though interface is abstract, we mark it as non-abstract to
         # allow adaptation pattern: IInterface(context)
-        cls.info.is_abstract = False
         if md.get("interface_analyzed", False):
             return
 
@@ -475,17 +453,97 @@ class ZopeInterfacePlugin(Plugin):
             func_def.arg_kinds.insert(0, ARG_POS)
             func_def.arguments.insert(0, selfarg)
 
-        func_def.is_abstract = True
-        if func_def.name() in ("__getattr__", "__getattribute__"):
-            # These special methods cannot be decorated. Likely a mypy bug.
-            return func_def
-        func_def.is_decorated = True
-        var = Var(func_def.name(), func_def.type)
-        var.is_initialized_in_class = True
-        var.info = func_def.info
-        var.set_line(func_def.line)
-        decor = Decorator(func_def, [], var)
-        return decor
+        return func_def
+
+    def _report_implementation_problems(
+        self,
+        class_type: Instance,
+        iface_type: Instance,
+        api: CheckerPluginInterface,
+        context: Context,
+    ) -> None:
+        # This mimicks mypy's MessageBuilder.report_protocol_problems with
+        # simplifications for zope interfaces.
+        class_info = class_type.type
+        iface_info = iface_type.type
+        interface_members = self._get_interface_members(iface_info)
+
+        # Report missing members
+        missing = []
+        for member in interface_members:
+            if find_member(member, class_type, class_type) is None:
+                missing.append(member)
+
+        if missing:
+            missing_fmt = ", ".join(missing)
+            api.fail(
+                f"'{class_info.name()}' is missing following "
+                f"'{iface_info.name()}' interface members: {missing_fmt}.",
+                context,
+            )
+
+        # Report member type conflicts
+        conflicts = []  # tuple of (name, got, expected)
+        for member in interface_members:
+            iface_member_type = find_member(member, iface_type, iface_type)
+            assert iface_member_type is not None
+            impl_member_type = find_member(member, class_type, class_type)
+            if impl_member_type is None:
+                continue
+
+            if isinstance(impl_member_type, PartialType):
+                # We don't know how to deal with partial type here. Partial
+                # types will be resolved later when the implementation class is
+                # fully type-checked. We are doing our job before that, so all
+                # we can do is to skip checking of such members.
+                continue
+
+            is_compat = is_subtype(
+                impl_member_type, iface_member_type, ignore_pos_arg_names=True
+            )
+            if not is_compat:
+                conflicts.append((member, impl_member_type, iface_member_type))
+
+        if conflicts:
+            api.fail(f'Invalid implementation of "{iface_info.name()}"', context)
+            for name, got, expected in conflicts:
+                fmt_got, fmt_expected = api.msg.format_distinctly(got, expected)
+                if isinstance(got, CallableType):
+                    fmt_got = api.msg.pretty_callable(got)
+                else:
+                    fmt_got = api.msg.format(got)
+
+                if isinstance(expected, CallableType):
+                    fmt_expected = api.msg.pretty_callable(expected)
+                else:
+                    fmt_expected = api.msg.format(expected)
+
+                api.fail(
+                    f"Incompatible implementation of '{iface_info.name()}.{name}': "
+                    f"Got {fmt_got}; expected {fmt_expected}",
+                    got,
+                )
+
+    def _lookup_type(self, fullname: str, api: TypeChecker) -> Instance:
+        # Implement own type lookup, because TypeChecker.named_generic_type is
+        # dysfunctional
+        parts = fullname.split(".")
+        module_name = ".".join(parts[:-1])
+        type_name = parts[-1]
+        module = api.modules[module_name]
+        sym = module.names[type_name]
+        typeinfo = sym.node
+        assert isinstance(typeinfo, TypeInfo)
+        any_type = AnyType(TypeOfAny.from_omitted_generics)
+        return Instance(typeinfo, [any_type] * len(typeinfo.defn.type_vars))
+
+    def _get_interface_members(self, iface_info: TypeInfo) -> List[str]:
+        members = set()
+        # we skip "object" and "Interface" since everyone implements it
+        for base in iface_info.mro[:-2]:
+            for name in base.names:
+                members.add(name)
+        return sorted(list(members))
 
 
 def plugin(version: str) -> PyType[Plugin]:

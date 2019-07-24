@@ -11,7 +11,7 @@ class IBookmark(zope.interface.Interface):
 
 @zope.interface.implementer(IBookmark)
 class Bookmark(object):
-    pass
+    field = None
 
 def main(obj: Optional[IBookmark]) -> None:
 

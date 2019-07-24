@@ -14,15 +14,18 @@ class IBar(zope.interface.Interface):
 
 @zope.interface.implementer(IFoo)
 class Foo(object):
-    pass
+    f_str = None
+    f_str_opt = None
+    f_int = None
+    f_bar = None
 
 @zope.interface.implementer(IBar)
 class Bar(object):
     pass
 
 def main() -> None:
-    foo = Foo()
-    bar = Bar()
+    foo: IFoo = Foo()
+    bar: IBar = Bar()
 
     foo.f_str = "Sample"
     foo.f_str = 10
@@ -36,7 +39,7 @@ if __name__ == '__main__':
 
 """
 <output>
-interface_annotated_attribute.py:28: error: Incompatible types in assignment (expression has type "int", variable has type "str")
-interface_annotated_attribute.py:29: error: Incompatible types in assignment (expression has type "None", variable has type "str")
+interface_annotated_attribute.py:31: error: Incompatible types in assignment (expression has type "int", variable has type "str")
+interface_annotated_attribute.py:32: error: Incompatible types in assignment (expression has type "None", variable has type "str")
 </output>
 """

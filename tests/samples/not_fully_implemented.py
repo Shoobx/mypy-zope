@@ -27,6 +27,6 @@ if __name__ == '__main__':
 
 """
 <output>
-not_fully_implemented.py:21: error: Cannot instantiate abstract class 'Something' with abstract attribute 'hello'
+not_fully_implemented.py:12: error: 'Something' is missing following 'ISomething' interface members: hello.
 </output>
 """
