@@ -9,10 +9,15 @@ $(VE): setup.py
 
 .PHONY: test
 test:
-	$(VEBIN)/pytest -v --cov src/mypy_zope
+	$(VEBIN)/pytest -v --cov src/mypy_zope --cov-report=html
+
 
 # Mypy self-test
 .PHONY: mypy
 mypy:
+	$(VEBIN)/mypy src/mypy_zope --strict
+
+.PHONY: mypy-report
+mypy-report:
 	$(VEBIN)/mypy src/mypy_zope --strict --html-report reports/html --txt-report reports/txt
 	cat reports/txt/index.txt
