@@ -10,7 +10,7 @@ class BookmarkContainer(object):
         pass
 
 def main() -> None:
-    bc = BookmarkContainer()
+    bc: IBookmarkContainer = BookmarkContainer()
     bc['one'] = 1
 
 if __name__ == '__main__':
@@ -18,6 +18,6 @@ if __name__ == '__main__':
 
 """
 <output>
-interface_mapping.py:13: error: Cannot instantiate abstract class 'BookmarkContainer' with abstract attributes '__contains__', '__delitem__', ... and 'keys' (6 methods suppressed)
+interface_mapping.py:8: error: 'BookmarkContainer' is missing following 'IBookmarkContainer' interface members: __contains__, __delitem__, __getitem__, __iter__, __len__, __setitem__, get, items, keys.
 </output>
 """

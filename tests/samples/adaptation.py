@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
 """
 <output>
+adaptation.py:11: error: 'AbstractSomething' is missing following 'ISomething' interface members: hello.
 adaptation.py:27: error: Argument 2 to "hello" of "ISomething" has incompatible type "int"; expected "str"
-adaptation.py:29: error: Cannot instantiate abstract class 'AbstractSomething' with abstract attribute 'hello'
 </output>
 """

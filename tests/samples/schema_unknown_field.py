@@ -13,10 +13,10 @@ class IBookmark(zope.interface.Interface):
 
 @zope.interface.implementer(IBookmark)
 class Bookmark(object):
-    pass
+    field = None
 
 def main() -> None:
-    bm = Bookmark()
+    bm: IBookmark = Bookmark()
 
     # We can assign anything to unknown fields
     bm.field = 343

@@ -7,10 +7,10 @@ class IBookmark(zope.interface.Interface):
 
 @zope.interface.implementer(IBookmark)
 class Bookmark(object):
-    pass
+    flag = True
 
 def main() -> None:
-    bm = Bookmark()
+    bm: IBookmark = Bookmark()
     bm.flag = 343  # Error, expected to be boolean
     bm.flag = None
     bm.flag = True
