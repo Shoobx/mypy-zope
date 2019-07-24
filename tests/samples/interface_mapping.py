@@ -5,12 +5,17 @@ class IBookmarkContainer(mapping.IMapping):
     pass
 
 @zope.interface.implementer(IBookmarkContainer)
-class BookmarkContainer(object):
+class BadContainer(object):
     def values(self):
         pass
 
+@zope.interface.implementer(IBookmarkContainer)
+class GoodContainer(dict):
+    pass
+
+
 def main() -> None:
-    bc: IBookmarkContainer = BookmarkContainer()
+    bc: IBookmarkContainer = GoodContainer()
     bc['one'] = 1
 
 if __name__ == '__main__':
@@ -18,6 +23,9 @@ if __name__ == '__main__':
 
 """
 <output>
-interface_mapping.py:8: error: 'BookmarkContainer' is missing following 'IBookmarkContainer' interface members: __contains__, __delitem__, __getitem__, __iter__, __len__, __setitem__, get, items, keys.
+interface_mapping.py:8: error: 'BadContainer' is missing following 'zope.interface.common.mapping.IItemMapping' interface members: __getitem__.
+interface_mapping.py:8: error: 'BadContainer' is missing following 'zope.interface.common.mapping.IReadMapping' interface members: __contains__, get.
+interface_mapping.py:8: error: 'BadContainer' is missing following 'zope.interface.common.mapping.IEnumerableMapping' interface members: __iter__, __len__, items, keys.
+interface_mapping.py:8: error: 'BadContainer' is missing following 'zope.interface.common.mapping.IWriteMapping' interface members: __delitem__, __setitem__.
 </output>
 """

@@ -29,7 +29,6 @@ if __name__ == '__main__':
 
 """
 <output>
-incompatible_signature.py:13: error: Invalid implementation of "ISomething"
-incompatible_signature.py:14: error: Incompatible implementation of 'ISomething.hello': Got def hello(self, x: int, y: int) -> None; expected def hello(self, x: int, y: str) -> None
+incompatible_signature.py:14: error: Argument 2 of "Something" is incompatible with "hello" of supertype "ISomething"; supertype defines the argument type as "str"
 </output>
 """

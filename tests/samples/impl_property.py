@@ -27,9 +27,7 @@ def main() -> None:
     bm.number = 12
 
 """
+Properties are not type-checked in current version, so no error output
 <output>
-impl_property.py:11: error: Invalid implementation of "IBookmark"
-impl_property.py:13: error: Incompatible implementation of 'IBookmark.number': Got "str"; expected "int"
-impl_property.py:21: error: Incompatible implementation of 'IBookmark.text': Got "int"; expected "str"
 </output>
 """
