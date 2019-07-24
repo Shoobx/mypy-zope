@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 long_description = """
 # Plugin for mypy to support zope.interface
@@ -7,7 +7,7 @@ The goal is to be able to make zope interfaces to be treated as types in mypy
 sense.
 
 For feature description and usage instructions, see
-https://github.com/Shoobx/mypy-zope.
+[mypy-zope github page](https://github.com/Shoobx/mypy-zope).
 """
 
 setup(
@@ -20,7 +20,7 @@ setup(
     description="Plugin for mypy to support zope interfaces",
     packages=["mypy_zope", "zope-stubs"],
     package_dir={"": "src"},
-    install_requires=["mypy>=0.660", "zope.interface", "zope.schema"],
+    install_requires=["mypy==0.720", "zope.interface", "zope.schema"],
     extras_require={"test": ["pytest>=4.0.0,<4.1.0", "pytest-cov", "lxml"]},
     classifiers=[
         "Development Status :: 3 - Alpha",
