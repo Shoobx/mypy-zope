@@ -47,12 +47,14 @@ class IAnimal(zope.interface.Interface):
 class Cow(object):
     def say(self) -> None:
         print("Moooo")
+
+animal: IAnimal = Cow()
+animal.say()
 ```
 
-The interface `IAnimal` will be treated as an abstract base class of the
-implementation `Cow`: you will not be able to instantiate `Cow` if interface
-implementation is incomplete. Incompatible method signatures will be reported
-as well.
+The interface `IAnimal` will be treated as superclass of the implementation
+`Cow`: you will be able to pass an implementation to functions accepting an
+interface and all the usual polymorphism tricks.
 
 ### Schema field type inference
 A limited support for defining attributes as `zope.schema.Field`s is supported too:
@@ -69,8 +71,8 @@ class Cow(object):
 In context of an interface, some known `zope.schema` field types are
 automatically translated to python types, so the `number_of_legs` attributes is
 getting the type `int` in the example above. That means mypy will report an
-error if you try to assign string to that attribute on an instance of a `Cow`
-class. Custom fields or fields not recognized by plugin are given type `Any`.
+error if you try to assign string to that attribute on an instance of `IAnimal`
+type. Custom fields or fields not recognized by plugin are given type `Any`.
 
 ### Field properties
 
@@ -105,12 +107,6 @@ adapter.fit()
 
 Type of the `adapter` variable will be set to `IEUPowerSocket`.
 
-### Type stubs for zope.interface and zope.schema
-
-`mypy-zope` ships with type stubs (`*.pyi` files) for `zope.interface` and
-`zope.schema` packages. They are enabled automatically as soon as plugin is
-enabled.
-
 ### Conditional type inference
 
 When using `zope.interface`'s `implementedBy()` and `providedBy()` methods
@@ -122,6 +118,13 @@ if IAnimal.providedBy(ob):
 
 ```
 
+### Type stubs for zope.interface and zope.schema
+
+`mypy-zope` ships with type stubs (`*.pyi` files) for `zope.interface` and
+`zope.schema` packages. They are enabled automatically as soon as plugin is
+enabled.
+
+
 ## What is not supported?
 
 These `zope.interface` features are not supported:
@@ -129,6 +132,7 @@ These `zope.interface` features are not supported:
 * Declaring modules as interface implementers.
 * Type inference for `zope.schema.List` and `zope.schema.Dict` fields.
 * Stub files are largely incomplete
+* Interface compatibility checker will not type-check non-method attributes
 
 ## Under development!
 

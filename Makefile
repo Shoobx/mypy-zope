@@ -9,7 +9,7 @@ $(VE): setup.py
 
 .PHONY: test
 test:
-	$(VEBIN)/pytest -v --cov src/mypy_zope --cov-report=html
+	$(VEBIN)/pytest -v --cov src/mypy_zope --cov-report=html --cov-report=term
 
 
 # Mypy self-test

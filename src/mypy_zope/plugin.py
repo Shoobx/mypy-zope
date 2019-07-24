@@ -12,6 +12,7 @@ from mypy.types import (
     AnyType,
     TypeOfAny,
     PartialType,
+    FunctionLike,
 )
 from mypy.checker import TypeChecker, is_false_literal
 from mypy.nodes import TypeInfo
@@ -26,7 +27,7 @@ from mypy.plugin import (
     AttributeContext,
     ClassDefContext,
 )
-from mypy.subtypes import find_member, is_subtype
+from mypy.subtypes import find_member
 
 from mypy.nodes import (
     Context,
@@ -48,6 +49,8 @@ from mypy.nodes import (
     ARG_OPT,
     FUNC_NO_INFO,
 )
+
+from collections import defaultdict
 
 
 def make_simple_type(
@@ -457,72 +460,107 @@ class ZopeInterfacePlugin(Plugin):
 
     def _report_implementation_problems(
         self,
-        class_type: Instance,
+        impl_type: Instance,
         iface_type: Instance,
         api: CheckerPluginInterface,
         context: Context,
     ) -> None:
         # This mimicks mypy's MessageBuilder.report_protocol_problems with
         # simplifications for zope interfaces.
-        class_info = class_type.type
+
+        # Blatantly assume we are dealing with this particular implementation
+        # of CheckerPluginInterface, because it has functionality we want to
+        # reuse.
+        assert isinstance(api, TypeChecker)
+
+        impl_info = impl_type.type
         iface_info = iface_type.type
-        interface_members = self._get_interface_members(iface_info)
+        iface_members = self._index_members(iface_info)
+        impl_members = self._index_members(impl_info)
 
         # Report missing members
-        missing = []
-        for member in interface_members:
-            if find_member(member, class_type, class_type) is None:
-                missing.append(member)
+        missing: Dict[str, List[str]] = defaultdict(list)
+        for member, member_iface in iface_members.items():
+            if find_member(member, impl_type, impl_type) is None:
+                iface_name = member_iface.fullname()
+                if member_iface == iface_info:
+                    # Since interface is directly implemented by this class, we
+                    # can use shorter name.
+                    iface_name = member_iface.name()
+                missing[iface_name].append(member)
 
         if missing:
-            missing_fmt = ", ".join(missing)
-            api.fail(
-                f"'{class_info.name()}' is missing following "
-                f"'{iface_info.name()}' interface members: {missing_fmt}.",
-                context,
-            )
+            for iface_name, members in missing.items():
+                missing_fmt = ", ".join(members)
+                api.fail(
+                    f"'{impl_info.name()}' is missing following "
+                    f"'{iface_name}' interface members: {missing_fmt}.",
+                    context,
+                )
 
         # Report member type conflicts
-        conflicts = []  # tuple of (name, got, expected)
-        for member in interface_members:
-            iface_member_type = find_member(member, iface_type, iface_type)
-            assert iface_member_type is not None
-            impl_member_type = find_member(member, class_type, class_type)
-            if impl_member_type is None:
+        for member, member_iface in iface_members.items():
+            iface_mtype = find_member(member, iface_type, iface_type)
+            assert iface_mtype is not None
+            impl_mtype = find_member(member, impl_type, impl_type)
+            if impl_mtype is None:
                 continue
 
-            if isinstance(impl_member_type, PartialType):
+            # Find out context for error reporting. If the member is not
+            # defined inside the class that declares interface implementation,
+            # show the error near the class definition. Otherwise, show it near
+            # the member definition.
+            ctx: Context = impl_info
+            impl_member_def_info = impl_members.get(member)
+            impl_name = impl_info.name()
+            if impl_member_def_info is not None:
+                if impl_member_def_info == impl_info:
+                    ctx = impl_mtype
+                else:
+                    impl_name = impl_member_def_info.fullname()
+
+            iface_name = iface_info.name()
+            if member_iface != iface_info:
+                iface_name = member_iface.fullname()
+
+            if isinstance(impl_mtype, PartialType):
                 # We don't know how to deal with partial type here. Partial
                 # types will be resolved later when the implementation class is
                 # fully type-checked. We are doing our job before that, so all
                 # we can do is to skip checking of such members.
                 continue
 
-            is_compat = is_subtype(
-                impl_member_type, iface_member_type, ignore_pos_arg_names=True
-            )
-            if not is_compat:
-                conflicts.append((member, impl_member_type, iface_member_type))
-
-        if conflicts:
-            api.fail(f'Invalid implementation of "{iface_info.name()}"', context)
-            for name, got, expected in conflicts:
-                fmt_got, fmt_expected = api.msg.format_distinctly(got, expected)
-                if isinstance(got, CallableType):
-                    fmt_got = api.msg.pretty_callable(got)
-                else:
-                    fmt_got = api.msg.format(got)
-
-                if isinstance(expected, CallableType):
-                    fmt_expected = api.msg.pretty_callable(expected)
-                else:
-                    fmt_expected = api.msg.format(expected)
-
-                api.fail(
-                    f"Incompatible implementation of '{iface_info.name()}.{name}': "
-                    f"Got {fmt_got}; expected {fmt_expected}",
-                    got,
+            if isinstance(iface_mtype, FunctionLike) and isinstance(
+                impl_mtype, FunctionLike
+            ):
+                api.check_override(
+                    override=impl_mtype,
+                    original=iface_mtype,
+                    name=impl_name,
+                    name_in_super=member,
+                    supertype=iface_name,
+                    original_class_or_static=False,
+                    override_class_or_static=False,
+                    node=ctx,
                 )
+
+            else:
+                # We could check the field type for compatibility with the code
+                # below, however this yields too many false-positives in
+                # real-life projects. The problem is that we can only check
+                # types defined on a class, instead of instance types, so all
+                # "descriptor" properties will be falsly reported as type
+                # mismatches. Instead we opt-out from property type checking
+                # until we figure out the workaround.
+
+                # api.check_subtype(
+                #     impl_mtype,
+                #     iface_mtype,
+                #     context=ctx,
+                #     subtype_label=f'"{impl_name}" has type',
+                #     supertype_label=f'interface "{iface_name}" defines "{member}" as',
+                # )
+                pass
 
     def _lookup_type(self, fullname: str, api: TypeChecker) -> Instance:
         # Implement own type lookup, because TypeChecker.named_generic_type is
@@ -537,13 +575,18 @@ class ZopeInterfacePlugin(Plugin):
         any_type = AnyType(TypeOfAny.from_omitted_generics)
         return Instance(typeinfo, [any_type] * len(typeinfo.defn.type_vars))
 
-    def _get_interface_members(self, iface_info: TypeInfo) -> List[str]:
-        members = set()
+    def _index_members(self, typeinfo: TypeInfo) -> Dict[str, TypeInfo]:
         # we skip "object" and "Interface" since everyone implements it
-        for base in iface_info.mro[:-2]:
+        members = {}
+        for base in reversed(typeinfo.mro):
+            if base.fullname() == "builtins.object":
+                continue
+            if base.fullname() == "zope.interface.interface.Interface":
+                continue
             for name in base.names:
-                members.add(name)
-        return sorted(list(members))
+                # Members of subtypes override members of supertype
+                members[name] = base
+        return members
 
 
 def plugin(version: str) -> PyType[Plugin]:

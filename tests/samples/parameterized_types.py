@@ -18,7 +18,6 @@ class Something(object):
 
 """
 <output>
-parameterized_types.py:14: error: Invalid implementation of "ISomething"
-parameterized_types.py:15: error: Incompatible implementation of 'ISomething.hello': Got def hello(self, names: List[int]) -> None; expected def hello(self, names: List[str]) -> None
+parameterized_types.py:15: error: Argument 1 of "Something" is incompatible with "hello" of supertype "ISomething"; supertype defines the argument type as "List[str]"
 </output>
 """
