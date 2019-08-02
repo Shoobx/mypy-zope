@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-0.3.0 (unreleased)
-------------------
+## [Unreleased]
 
 - Nothing changed yet.
 
@@ -19,4 +18,5 @@ All notable changes to this project will be documented in this file.
 - Initial release.
 
 [Unreleased]: https://github.com/Shoobx/mypy-zope
+[0.2.0]: https://github.com/Shoobx/mypy-zope/releases/tag/0.2.0
 [0.1.3]: https://github.com/Shoobx/mypy-zope/releases/tag/0.1.3
