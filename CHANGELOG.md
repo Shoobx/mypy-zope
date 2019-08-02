@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+0.3.0 (unreleased)
+------------------
+
+- Nothing changed yet.
+
+
 ## [0.2.0] - 2019-08-03
 
 - Support for Mypy-0.720.

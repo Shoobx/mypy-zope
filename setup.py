@@ -12,7 +12,7 @@ For feature description and usage instructions, see
 
 setup(
     name="mypy-zope",
-    version="0.2.0",
+    version="0.3.0.dev0",
     author="Andrey Lebedev",
     author_email="andrey.lebedev@gmail.com",
     long_description=long_description,
