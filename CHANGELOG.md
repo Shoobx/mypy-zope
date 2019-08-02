@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.2.0] - 2019-08-03
 
 - Support for Mypy-0.720.
 - Avoid merging interface and implementation class hierarchies into single MRO.
