@@ -284,6 +284,11 @@ class ZopeInterfacePlugin(Plugin):
             base_name = reason.fullname
             if not base_name:
                 return
+            if '.' not in base_name:
+                # When class is inherited from a dynamic parameter, it will not
+                # have a fully-qualified name, so we cannot use api to look it
+                # up. Just give up in this case.
+                return
             base_node = api.lookup_fully_qualified_or_none(base_name)
             if not base_node:
                 return
