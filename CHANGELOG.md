@@ -2,9 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.2.1] - 2019-09-30
 
-- Nothing changed yet.
+- Upgrade to Mypy-0.730
+- Fixing crash while analyzing dynamically inherited class definitions (#11)
 
 
 ## [0.2.0] - 2019-08-03
