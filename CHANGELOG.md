@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 0.3.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+## [0.2.2] - 2019-10-28
+
+- Upgrade to Mypy-0.740
 
 
 ## [0.2.1] - 2019-09-30
@@ -25,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Initial release.
 
 [Unreleased]: https://github.com/Shoobx/mypy-zope
+[0.2.2]: https://github.com/Shoobx/mypy-zope/releases/tag/0.2.2
 [0.2.1]: https://github.com/Shoobx/mypy-zope/releases/tag/0.2.1
 [0.2.0]: https://github.com/Shoobx/mypy-zope/releases/tag/0.2.0
 [0.1.3]: https://github.com/Shoobx/mypy-zope/releases/tag/0.1.3
