@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-0.3.0 (unreleased)
+0.2.2 (2019-10-28)
 ------------------
 
 ## [0.2.2] - 2019-10-28
