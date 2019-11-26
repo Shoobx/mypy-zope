@@ -230,10 +230,10 @@ class ZopeInterfacePlugin(Plugin):
             if "implements" not in md:
                 md["implements"] = []
             # impl_list = cast(List[str], md['implements'])
-            md["implements"].append(iface_type.fullname())
+            md["implements"].append(iface_type.fullname)
             self.log(
                 f"Found implementation of "
-                f"{iface_type.fullname()}: {class_info.fullname()}"
+                f"{iface_type.fullname}: {class_info.fullname}"
             )
 
             # Make sure implementation is treates subtype of an interface. Pretend
@@ -296,7 +296,7 @@ class ZopeInterfacePlugin(Plugin):
                 return
 
             if self._is_interface(base_node.node):
-                self.log(f"Found zope subinterface: {cls_info.fullname()}")
+                self.log(f"Found zope subinterface: {cls_info.fullname}")
                 cls_md = self._get_metadata(cls_info)
                 cls_md["is_interface"] = True
 
@@ -344,7 +344,7 @@ class ZopeInterfacePlugin(Plugin):
             # If we are dealing with an interface, massage it a bit, e.g.
             # inject `self` argument to all methods
             directiface = "zope.interface.interface.Interface" in [
-                b.type.fullname() for b in info.bases
+                b.type.fullname for b in info.bases
             ]
             subinterface = any(self._is_interface(b.type) for b in info.bases)
             if directiface or subinterface:
@@ -359,7 +359,7 @@ class ZopeInterfacePlugin(Plugin):
         if not isinstance(typ, Instance):
             return False
 
-        parent_names = [t.fullname() for t in typ.type.mro]
+        parent_names = [t.fullname for t in typ.type.mro]
         return classname in parent_names
 
     def _get_schema_field_type(
@@ -411,7 +411,7 @@ class ZopeInterfacePlugin(Plugin):
     def _analyze_zope_interface(
         self, api: SemanticAnalyzerPluginInterface, cls: ClassDef
     ) -> None:
-        self.log(f"Adjusting zope interface: {cls.info.fullname()}")
+        self.log(f"Adjusting zope interface: {cls.info.fullname}")
         md = self._get_metadata(cls.info)
         # Even though interface is abstract, we mark it as non-abstract to
         # allow adaptation pattern: IInterface(context)
@@ -491,14 +491,14 @@ class ZopeInterfacePlugin(Plugin):
                 if member_iface == iface_info:
                     # Since interface is directly implemented by this class, we
                     # can use shorter name.
-                    iface_name = member_iface.name()
+                    iface_name = member_iface.name
                 missing[iface_name].append(member)
 
         if missing:
             for iface_name, members in missing.items():
                 missing_fmt = ", ".join(members)
                 api.fail(
-                    f"'{impl_info.name()}' is missing following "
+                    f"'{impl_info.name}' is missing following "
                     f"'{iface_name}' interface members: {missing_fmt}.",
                     context,
                 )
@@ -517,16 +517,16 @@ class ZopeInterfacePlugin(Plugin):
             # the member definition.
             ctx: Context = impl_info
             impl_member_def_info = impl_members.get(member)
-            impl_name = impl_info.name()
+            impl_name = impl_info.name
             if impl_member_def_info is not None:
                 if impl_member_def_info == impl_info:
                     ctx = impl_mtype
                 else:
-                    impl_name = impl_member_def_info.fullname()
+                    impl_name = impl_member_def_info.fullname
 
-            iface_name = iface_info.name()
+            iface_name = iface_info.name
             if member_iface != iface_info:
-                iface_name = member_iface.fullname()
+                iface_name = member_iface.fullname
 
             if isinstance(impl_mtype, PartialType):
                 # We don't know how to deal with partial type here. Partial
@@ -584,9 +584,9 @@ class ZopeInterfacePlugin(Plugin):
         # we skip "object" and "Interface" since everyone implements it
         members = {}
         for base in reversed(typeinfo.mro):
-            if base.fullname() == "builtins.object":
+            if base.fullname == "builtins.object":
                 continue
-            if base.fullname() == "zope.interface.interface.Interface":
+            if base.fullname == "zope.interface.interface.Interface":
                 continue
             for name in base.names:
                 # Members of subtypes override members of supertype
