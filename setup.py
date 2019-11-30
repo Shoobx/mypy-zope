@@ -12,7 +12,7 @@ For feature description and usage instructions, see
 
 setup(
     name="mypy-zope",
-    version="0.2.3.dev0",
+    version="0.2.3",
     author="Andrey Lebedev",
     author_email="andrey.lebedev@gmail.com",
     long_description=long_description,
@@ -28,6 +28,7 @@ setup(
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Topic :: Software Development",
