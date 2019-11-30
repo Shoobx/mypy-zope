@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+0.2.4 (unreleased)
+------------------
+
+- Nothing changed yet.
+
+
 ## [0.2.3] - 2019-11-30
 
 - Upgrade to Mypy-0.750
