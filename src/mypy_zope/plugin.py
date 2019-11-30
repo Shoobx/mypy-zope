@@ -386,7 +386,7 @@ class ZopeInterfacePlugin(Plugin):
         if not isinstance(typ, Instance):
             return typ
 
-        parent_names = [t.fullname() for t in typ.type.mro]
+        parent_names = [t.fullname for t in typ.type.mro]
 
         # If it is a konwn field, build a python type out of it
         for clsname in parent_names:
@@ -398,12 +398,12 @@ class ZopeInterfacePlugin(Plugin):
             if convtype:
                 self.log(
                     f"Converting a field {typ} into type {convtype} "
-                    f"for {scopecls.fullname()}"
+                    f"for {scopecls.fullname}"
                 )
                 return convtype
 
         # For unknown fields, just return ANY
-        self.log(f"Unknown field {typ} in interface {scopecls.fullname()}")
+        self.log(f"Unknown field {typ} in interface {scopecls.fullname}")
         return AnyType(
             TypeOfAny.implementation_artifact, line=typ.line, column=typ.column
         )
@@ -487,7 +487,7 @@ class ZopeInterfacePlugin(Plugin):
         missing: Dict[str, List[str]] = defaultdict(list)
         for member, member_iface in iface_members.items():
             if find_member(member, impl_type, impl_type) is None:
-                iface_name = member_iface.fullname()
+                iface_name = member_iface.fullname
                 if member_iface == iface_info:
                     # Since interface is directly implemented by this class, we
                     # can use shorter name.

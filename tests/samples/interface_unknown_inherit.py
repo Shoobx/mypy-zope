@@ -18,7 +18,7 @@ class Bookmark(object):
 
 """
 <output>
-interface_unknown_inherit.py:8: error: Cannot find module named 'unknown.interfaces'
+interface_unknown_inherit.py:8: error: Cannot find implementation or library stub for module named 'unknown.interfaces'
 interface_unknown_inherit.py:8: note: See https://mypy.readthedocs.io/en/latest/running_mypy.html#missing-imports
 interface_unknown_inherit.py:11: error: Method must have at least one argument
 interface_unknown_inherit.py:14: error: zope.interface.implementer accepts interface, not __main__.IKnownInterface.
