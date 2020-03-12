@@ -4,7 +4,7 @@ VEBIN=$(VE)/bin
 all: $(VE)
 
 $(VE): setup.py
-	virtualenv -p python3 $(VE)
+	python3 -m venv $(VE)
 	$(VEBIN)/pip install -e .[test]
 
 .PHONY: test
