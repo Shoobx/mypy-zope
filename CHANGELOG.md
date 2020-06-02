@@ -2,7 +2,8 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.2.6] (unreleased)
+
+## [0.2.6] - 2020-06-02
 
 - Improved mypy annotations in Components methods
 
