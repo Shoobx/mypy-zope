@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.7] (unreleased)
+------------------
+
+- Nothing changed yet.
+
 
 ## [0.2.6] - 2020-06-02
 
