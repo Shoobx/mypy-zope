@@ -30,5 +30,7 @@ if __name__ == '__main__':
 """
 <output>
 incompatible_signature.py:14: error: Argument 2 of "Something" is incompatible with "hello" of supertype "ISomething"; supertype defines the argument type as "str"
+incompatible_signature.py:14: note: This violates the Liskov substitution principle
+incompatible_signature.py:14: note: See https://mypy.readthedocs.io/en/stable/common_issues.html#incompatible-overrides
 </output>
 """

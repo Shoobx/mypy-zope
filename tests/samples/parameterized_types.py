@@ -19,5 +19,7 @@ class Something(object):
 """
 <output>
 parameterized_types.py:15: error: Argument 1 of "Something" is incompatible with "hello" of supertype "ISomething"; supertype defines the argument type as "List[str]"
+parameterized_types.py:15: note: This violates the Liskov substitution principle
+parameterized_types.py:15: note: See https://mypy.readthedocs.io/en/stable/common_issues.html#incompatible-overrides
 </output>
 """
