@@ -20,7 +20,7 @@ setup(
     description="Plugin for mypy to support zope interfaces",
     packages=["mypy_zope", "zope-stubs"],
     package_dir={"": "src"},
-    install_requires=["mypy==0.780", "zope.interface", "zope.schema"],
+    install_requires=["mypy==0.782", "zope.interface", "zope.schema"],
     extras_require={"test": ["pytest>=4.6", "pytest-cov", "lxml"]},
     classifiers=[
         "Development Status :: 3 - Alpha",
