@@ -11,6 +11,9 @@ class ISuperSomething(ISomething):
     def greet(msg: str) -> None:
         pass
 
+class ISomethingSomething(ISuperSomething):
+    def wink(msg: str) -> None:
+        pass
 
 @zope.interface.implementer(ISuperSomething)
 class SuperSomething(object):
@@ -20,10 +23,13 @@ class SuperSomething(object):
     def greet(self, msg) -> None:
         print(f"Greetings, {msg}")
 
+@zope.interface.implementer(ISomethingSomething)
+class SomethingSomething(SuperSomething):
+    def wink(self, msg) -> None:
+        print(f"{msg} <wink>")
 
 def run(smth: ISomething):
     smth.hello(1, "test")
-
 
 
 def greet(smth: ISuperSomething):
@@ -34,6 +40,13 @@ def greet(smth: ISuperSomething):
 def main() -> None:
     smth = SuperSomething()
     run(smth)
+
+    smthsmth = SomethingSomething()
+    smthsmth.greet("bob")
+    smthsmth.wink("susanne")
+    smthsmth.hello(1, "dude")
+
+    run(smthsmth)
 
 
 if __name__ == '__main__':
