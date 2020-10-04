@@ -274,11 +274,6 @@ class ZopeInterfacePlugin(Plugin):
         self, fullname: str
     ) -> Optional[Callable[[ClassDefContext], None]]:
         # print(f"get_base_class_hook: {fullname}")
-        def analyze_direct(classdef_ctx: ClassDefContext) -> None:
-            self.log(f"Found zope interface: {classdef_ctx.cls.fullname}")
-            md = self._get_metadata(classdef_ctx.cls.info)
-            md["is_interface"] = True
-
         def analyze_subinterface(classdef_ctx: ClassDefContext) -> None:
             # If one of the bases is an interface, this is also an interface
             if isinstance(classdef_ctx.reason, IndexExpr):
@@ -309,9 +304,6 @@ class ZopeInterfacePlugin(Plugin):
                 self.log(f"Found zope subinterface: {cls_info.fullname}")
                 cls_md = self._get_metadata(cls_info)
                 cls_md["is_interface"] = True
-
-        if fullname == "zope.interface.interface.Interface":
-            return analyze_direct
 
         return analyze_subinterface
 
