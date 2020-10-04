@@ -48,6 +48,7 @@ from mypy.nodes import (
     ARG_POS,
     ARG_OPT,
     FUNC_NO_INFO,
+    NameExpr,
 )
 
 from collections import defaultdict
@@ -259,8 +260,8 @@ class ZopeInterfacePlugin(Plugin):
     ) -> Optional[Callable[[ClassDefContext], None]]:
         # print(f"get_metaclass_hook: {fullname}")
         def analyze_metaclass(ctx: ClassDefContext) -> None:
-            metaclass = ctx.cls.metaclass
-            info = metaclass.node
+            metaclass = cast(NameExpr, ctx.cls.metaclass)
+            info = cast(TypeInfo, metaclass.node)
             expected = "zope.interface.interface.InterfaceClass"
             if info and any(node.fullname == expected for node in info.mro):
                 self.log(f"Found zope interface: {ctx.cls.fullname}")
