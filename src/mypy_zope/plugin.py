@@ -258,14 +258,17 @@ class ZopeInterfacePlugin(Plugin):
         self, fullname: str
     ) -> Optional[Callable[[ClassDefContext], None]]:
         # print(f"get_metaclass_hook: {fullname}")
-        def analyze_metaclass(ctx: ClassDefContext) -> Callable[[ClassDefContext], None]:
+        def analyze_metaclass(
+            ctx: ClassDefContext,
+        ) -> Callable[[ClassDefContext], None]:
             def is_zope_interface_class(info):
-                expected = 'zope.interface.interface.InterfaceClass'
+                expected = "zope.interface.interface.InterfaceClass"
                 return info and any(node.fullname == expected for node in info.mro)
 
             if is_zope_interface_class(ctx.cls.metaclass.node):
                 md = self._get_metadata(ctx.cls.info)
                 md["is_interface"] = True
+
         return analyze_metaclass
 
     def get_base_class_hook(
