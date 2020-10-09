@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+0.2.9 (unreleased)
+------------------
+
+- Nothing changed yet.
+
+
 0.2.8 (2020-10-09)
 ------------------
 
