@@ -20,7 +20,7 @@ setup(
     description="Plugin for mypy to support zope interfaces",
     packages=["mypy_zope", "zope-stubs"],
     package_dir={"": "src"},
-    install_requires=["mypy==0.790", "zope.interface", "zope.schema"],
+    install_requires=["mypy==0.800", "zope.interface", "zope.schema"],
     extras_require={"test": ["pytest>=4.6", "pytest-cov", "lxml"]},
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -30,6 +30,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Topic :: Software Development",
