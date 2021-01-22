@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 0.2.9 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Upgrade to Mypy-0.800
+- Add support for Python 3.9.
 
 
 0.2.8 (2020-10-09)
