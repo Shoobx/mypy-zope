@@ -2,21 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-0.2.9 (unreleased)
-------------------
+## [0.2.9] - unreleased
 
 - Upgrade to Mypy-0.800
 - Add support for Python 3.9.
 
 
-0.2.8 (2020-10-09)
-------------------
+## [0.2.8] - 2020-10-09
 
 - Upgrade to Mypy-0.790
 
 
-[0.2.7] (2020-06-19)
---------------------
+## [0.2.7] - 2020-06-19
 
 - Upgrade to Mypy-0.770
 
@@ -64,6 +61,8 @@ All notable changes to this project will be documented in this file.
 - Initial release.
 
 [Unreleased]: https://github.com/Shoobx/mypy-zope
+[0.2.9]: https://github.com/Shoobx/mypy-zope/releases/tag/0.2.9
+[0.2.8]: https://github.com/Shoobx/mypy-zope/releases/tag/0.2.8
 [0.2.7]: https://github.com/Shoobx/mypy-zope/releases/tag/0.2.7
 [0.2.6]: https://github.com/Shoobx/mypy-zope/releases/tag/0.2.6
 [0.2.5]: https://github.com/Shoobx/mypy-zope/releases/tag/0.2.5
