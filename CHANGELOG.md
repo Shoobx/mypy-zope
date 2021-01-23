@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.2.9] - unreleased
+0.2.9 (2021-01-23)
 
 - Upgrade to Mypy-0.800
 - Add support for Python 3.9.
