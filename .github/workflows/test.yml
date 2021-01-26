@@ -3,7 +3,7 @@ name: mypy-zope
 on: [push]
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
     strategy:
@@ -32,5 +32,20 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN}}
+        COVERALLS_PARALLEL: true
       run: |
         coveralls --service=github
+
+  report:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v2
+    - name: Coveralls Finish
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN}}
+      run: |
+        pip install coveralls
+        coveralls --service=github --finish
