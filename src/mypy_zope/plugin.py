@@ -260,10 +260,15 @@ class ZopeInterfacePlugin(Plugin):
     ) -> Optional[Callable[[ClassDefContext], None]]:
         # print(f"get_metaclass_hook: {fullname}")
         def analyze_metaclass(ctx: ClassDefContext) -> None:
-            metaclass = cast(NameExpr, ctx.cls.metaclass)
-            info = cast(TypeInfo, metaclass.node)
+            metaclass = ctx.cls.metaclass
+            if not isinstance(metaclass, RefExpr):
+                return
+            info = metaclass.node
+            if not isinstance(info, TypeInfo):
+                return
+
             expected = "zope.interface.interface.InterfaceClass"
-            if info and any(node.fullname == expected for node in info.mro):
+            if any(node.fullname == expected for node in info.mro):
                 self.log(f"Found zope interface: {ctx.cls.fullname}")
                 md = self._get_metadata(ctx.cls.info)
                 md["is_interface"] = True
@@ -289,7 +294,7 @@ class ZopeInterfacePlugin(Plugin):
             base_name = reason.fullname
             if not base_name:
                 return
-            if '.' not in base_name:
+            if "." not in base_name:
                 # When class is inherited from a dynamic parameter, it will not
                 # have a fully-qualified name, so we cannot use api to look it
                 # up. Just give up in this case.
