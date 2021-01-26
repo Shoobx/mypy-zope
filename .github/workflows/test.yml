@@ -1,0 +1,36 @@
+name: mypy-zope
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade -e .[test]
+        pip install coveralls
+    - name: Test with pytest
+      run: |
+        pytest --junit-xml var/test-results/results.xml -v --cov src/mypy_zope --cov-report=term
+    - name: Check with mypy
+      run: |
+        mypy src/mypy_zope --strict
+    - name: Coveralls
+      if: ${{ success() }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN}}
+      run: |
+        coveralls --service=github
