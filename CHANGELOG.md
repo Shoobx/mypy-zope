@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-0.2.10 (unreleased)
+0.2.10 (2021-01-27)
 -------------------
 
 - Avoid failure when handling metaclasses of unknown type (#28).
