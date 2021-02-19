@@ -12,7 +12,7 @@ For feature description and usage instructions, see
 
 setup(
     name="mypy-zope",
-    version="0.2.11.dev0",
+    version="0.2.11",
     author="Andrey Lebedev",
     author_email="andrey.lebedev@gmail.com",
     long_description=long_description,
@@ -20,7 +20,7 @@ setup(
     description="Plugin for mypy to support zope interfaces",
     packages=["mypy_zope", "zope-stubs"],
     package_dir={"": "src"},
-    install_requires=["mypy==0.800", "zope.interface", "zope.schema"],
+    install_requires=["mypy==0.812", "zope.interface", "zope.schema"],
     extras_require={"test": ["pytest>=4.6", "pytest-cov", "lxml"]},
     classifiers=[
         "Development Status :: 3 - Alpha",
