@@ -15,6 +15,7 @@ from mypy.types import (
     FunctionLike,
 )
 from mypy.checker import TypeChecker, is_false_literal
+from mypy.options import Options
 from mypy.nodes import TypeInfo
 from mypy.plugin import (
     CheckerPluginInterface,
@@ -28,6 +29,7 @@ from mypy.plugin import (
     ClassDefContext,
 )
 from mypy.subtypes import find_member
+from mypy.plugins.default import DefaultPlugin
 
 from mypy.nodes import (
     Context,
@@ -91,6 +93,10 @@ SIMPLE_FIELD_TO_TYPE = {
 
 
 class ZopeInterfacePlugin(Plugin):
+    def __init__(self, options: Options):
+        super().__init__(options)
+        self.fallback = DefaultPlugin(options)
+
     def log(self, msg: str) -> None:
         if self.options.verbosity >= 1:
             print("ZOPE:", msg, file=sys.stderr)
@@ -121,6 +127,10 @@ class ZopeInterfacePlugin(Plugin):
 
             return deftype
 
+        # Give preference to deault plugin
+        hook = self.fallback.get_function_hook(fullname)
+        if hook is not None:
+            return hook
         return analyze
 
     def get_method_signature_hook(
