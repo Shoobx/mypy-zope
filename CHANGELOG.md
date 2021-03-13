@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 
 - Better type inference for contextmanagers and open() function: do not override 
   the default behavior for tese cases
-
+- Support interfaces defined inside classes
 
 0.2.11 (2021-02-21)
 -------------------
