@@ -1,5 +1,5 @@
 import sys
-from typing import List, Dict, Any, Callable, Optional
+from typing import List, Dict, Any, Callable, Optional, Tuple, Sequence, Union
 from typing import Type as PyType
 from typing import cast
 
@@ -51,6 +51,8 @@ from mypy.nodes import (
     ARG_OPT,
     FUNC_NO_INFO,
     NameExpr,
+    MypyFile,
+    SymbolNode,
 )
 
 from collections import defaultdict
@@ -585,17 +587,30 @@ class ZopeInterfacePlugin(Plugin):
                 pass
 
     def _lookup_type(self, fullname: str, api: TypeChecker) -> Instance:
-        # Implement own type lookup, because TypeChecker.named_generic_type is
-        # dysfunctional
-        parts = fullname.split(".")
-        module_name = ".".join(parts[:-1])
-        type_name = parts[-1]
-        module = api.modules[module_name]
-        sym = module.names[type_name]
-        typeinfo = sym.node
+        module, names = self._find_module(fullname, api)
+        container: Union[MypyFile, TypeInfo] = module
+        for name in names:
+            sym = container.names[name]
+            assert isinstance(sym.node, TypeInfo)
+            container = sym.node
+        typeinfo = container
         assert isinstance(typeinfo, TypeInfo)
+
         any_type = AnyType(TypeOfAny.from_omitted_generics)
         return Instance(typeinfo, [any_type] * len(typeinfo.defn.type_vars))
+
+    def _find_module(
+        self, fullname: str, api: TypeChecker
+    ) -> Tuple[MypyFile, Sequence[str]]:
+        parts = fullname.split(".")
+        for pn in range(len(parts) - 1, 0, -1):
+            moduleparts = parts[:pn]
+            names = parts[pn:]
+            modulename = ".".join(moduleparts)
+            if modulename in api.modules:
+                return api.modules[modulename], names
+
+        raise LookupError(fullname)
 
     def _index_members(self, typeinfo: TypeInfo) -> Dict[str, TypeInfo]:
         # we skip "object" and "Interface" since everyone implements it
