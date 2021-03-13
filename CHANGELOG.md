@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-0.2.12 (unreleased)
+0.2.12 (2021-03-13)
 -------------------
 
 - Better type inference for contextmanagers and open() function: do not override 
