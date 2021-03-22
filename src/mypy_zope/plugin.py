@@ -98,6 +98,8 @@ class ZopeInterfacePlugin(Plugin):
     def __init__(self, options: Options):
         super().__init__(options)
         self.fallback = DefaultPlugin(options)
+        # A cache of interface fullname to the fake implementation.
+        self._interfaces: Dict[str, TypeInfo] = {}
 
     def log(self, msg: str) -> None:
         if self.options.verbosity >= 1:
@@ -249,11 +251,16 @@ class ZopeInterfacePlugin(Plugin):
                 f"{iface_type.fullname}: {class_info.fullname}"
             )
 
-            # Make sure implementation is treates subtype of an interface. Pretend
-            # there is a decorator for the class that will create a "type promotion"
-            faketi = TypeInfo(SymbolTable(), iface_type.defn, iface_type.module_name)
-            faketi._promote = Instance(iface_type, [])
-            class_info.mro.append(faketi)
+            # Make sure implementation is treated as a subtype of an interface. Pretend
+            # there is a decorator for the class that will create a "type promotion",
+            # but ensure this only gets applied a single time per interface.
+            faketi = self._interfaces.get(iface_type.fullname)
+            if not faketi:
+                faketi = TypeInfo(SymbolTable(), iface_type.defn, iface_type.module_name)
+                faketi._promote = Instance(iface_type, [])
+                self._interfaces[iface_type.fullname] = faketi
+            if faketi not in class_info.mro:
+                class_info.mro.append(faketi)
 
         def analyze(classdef_ctx: ClassDefContext) -> None:
             api = classdef_ctx.api
