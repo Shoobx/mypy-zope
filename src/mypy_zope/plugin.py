@@ -249,11 +249,14 @@ class ZopeInterfacePlugin(Plugin):
                 f"{iface_type.fullname}: {class_info.fullname}"
             )
 
-            # Make sure implementation is treates subtype of an interface. Pretend
-            # there is a decorator for the class that will create a "type promotion"
-            faketi = TypeInfo(SymbolTable(), iface_type.defn, iface_type.module_name)
-            faketi._promote = Instance(iface_type, [])
-            class_info.mro.append(faketi)
+            # Make sure implementation is treated as a subtype of an interface. Pretend
+            # there is a decorator for the class that will create a "type promotion",
+            # but ensure this only gets applied a single time per interface.
+            promote = Instance(iface_type, [])
+            if not any(ti._promote == promote for ti in class_info.mro):
+                faketi = TypeInfo(SymbolTable(), iface_type.defn, iface_type.module_name)
+                faketi._promote = promote
+                class_info.mro.append(faketi)
 
         def analyze(classdef_ctx: ClassDefContext) -> None:
             api = classdef_ctx.api
