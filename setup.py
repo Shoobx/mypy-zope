@@ -1,6 +1,12 @@
 from setuptools import setup
 
-long_description = """
+
+setup(
+    name="mypy-zope",
+    version="0.2.13.dev0",
+    author="Andrey Lebedev",
+    author_email="andrey.lebedev@gmail.com",
+    long_description="""
 # Plugin for mypy to support zope.interface
 
 The goal is to be able to make zope interfaces to be treated as types in mypy
@@ -8,14 +14,7 @@ sense.
 
 For feature description and usage instructions, see
 [mypy-zope github page](https://github.com/Shoobx/mypy-zope).
-"""
-
-setup(
-    name="mypy-zope",
-    version="0.2.13.dev0",
-    author="Andrey Lebedev",
-    author_email="andrey.lebedev@gmail.com",
-    long_description=long_description,
+""",
     long_description_content_type="text/markdown",
     description="Plugin for mypy to support zope interfaces",
     packages=["mypy_zope", "zope-stubs"],
