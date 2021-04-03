@@ -56,6 +56,16 @@ The interface `IAnimal` will be treated as superclass of the implementation
 `Cow`: you will be able to pass an implementation to functions accepting an
 interface and all the usual polymorphism tricks.
 
+It is also possible to declare the implementation using `classImplements`
+function  with the same effect as `@imlementer` decorator. This is useful if
+you do not control the code that defines the implementation class.
+
+```python
+classImplements(Cow, IAnimal)
+
+animal: IAnimal = Cow()
+```
+
 ### Schema field type inference
 A limited support for defining attributes as `zope.schema.Field`s is supported too:
 
