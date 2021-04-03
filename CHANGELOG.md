@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 0.2.14 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Support for `classImplements` declarations (#40).
 
 
 0.2.13 (2021-03-23)

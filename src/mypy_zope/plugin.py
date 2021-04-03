@@ -113,6 +113,7 @@ class ZopeInterfacePlugin(Plugin):
         self, fullname: str
     ) -> Optional[Callable[[FunctionContext], Type]]:
         # print(f"get_function_hook: {fullname}")
+
         def analyze(function_ctx: FunctionContext) -> Type:
             # strtype = function_ctx.api.named_generic_type('builtins.str', [])
             # optstr = function_ctx.api.named_generic_type('typing.Optional', [strtype])
@@ -128,6 +129,56 @@ class ZopeInterfacePlugin(Plugin):
                 return AnyType(TypeOfAny.implementation_artifact)
 
             return deftype
+
+        def class_implements_hook(function_ctx: FunctionContext) -> Type:
+            assert len(function_ctx.arg_types) == 2
+            arg_impl = function_ctx.arg_types[0][0]
+            expr = function_ctx.args[0][0]
+            implname = expr.fullname if isinstance(expr, NameExpr) else "expression"
+            if not isinstance(arg_impl, CallableType):
+                function_ctx.api.fail(
+                    f"{implname} is not a class, "
+                    "cannot mark it as a interface implementation",
+                    function_ctx.context,
+                )
+                return function_ctx.default_return_type
+            assert isinstance(arg_impl, CallableType)
+            impl_type = arg_impl.ret_type
+            assert isinstance(impl_type, Instance)
+
+            for expr, arg_iface in zip(function_ctx.args[1], function_ctx.arg_types[1]):
+                exprname = expr.fullname if isinstance(expr, NameExpr) else "expression"
+                if not isinstance(arg_iface, CallableType):
+                    function_ctx.api.fail(
+                        f"{exprname} is not a class, "
+                        f"cannot mark {implname} as an implementation of "
+                        f"{exprname}",
+                        function_ctx.context,
+                    )
+                    continue
+
+                iface_type = arg_iface.ret_type
+                assert isinstance(iface_type, Instance)
+                if not self._is_interface(iface_type.type):
+                    function_ctx.api.fail(
+                        f"{exprname} is not an interface", function_ctx.context,
+                    )
+                    function_ctx.api.fail(
+                        f"Make sure you have stubs for all packages that "
+                        f"provide interfaces for {exprname} class hierarchy.",
+                        function_ctx.context,
+                    )
+                    continue
+
+                self._apply_interface(impl_type.type, iface_type.type)
+                self._report_implementation_problems(
+                    impl_type, iface_type, function_ctx.api, function_ctx.context
+                )
+
+            return function_ctx.default_return_type
+
+        if fullname == "zope.interface.declarations.classImplements":
+            return class_implements_hook
 
         # Give preference to deault plugin
         hook = self.fallback.get_function_hook(fullname)
@@ -202,11 +253,10 @@ class ZopeInterfacePlugin(Plugin):
     ) -> Optional[Callable[[ClassDefContext], None]]:
         # print(f"get_class_decorator_hook: {fullname}")
 
-        def apply_interface(
+        def apply_implementer(
             iface_arg: Expression,
             class_info: TypeInfo,
             api: SemanticAnalyzerPluginInterface,
-            context: Context,
         ) -> None:
             if not isinstance(iface_arg, RefExpr):
                 api.fail(
@@ -238,25 +288,7 @@ class ZopeInterfacePlugin(Plugin):
                 )
                 return
 
-            # print("CLASS INFO", class_info)
-            md = self._get_metadata(class_info)
-            if "implements" not in md:
-                md["implements"] = []
-            # impl_list = cast(List[str], md['implements'])
-            md["implements"].append(iface_type.fullname)
-            self.log(
-                f"Found implementation of "
-                f"{iface_type.fullname}: {class_info.fullname}"
-            )
-
-            # Make sure implementation is treated as a subtype of an interface. Pretend
-            # there is a decorator for the class that will create a "type promotion",
-            # but ensure this only gets applied a single time per interface.
-            promote = Instance(iface_type, [])
-            if not any(ti._promote == promote for ti in class_info.mro):
-                faketi = TypeInfo(SymbolTable(), iface_type.defn, iface_type.module_name)
-                faketi._promote = promote
-                class_info.mro.append(faketi)
+            self._apply_interface(class_info, iface_type)
 
         def analyze(classdef_ctx: ClassDefContext) -> None:
             api = classdef_ctx.api
@@ -264,7 +296,7 @@ class ZopeInterfacePlugin(Plugin):
             decor = cast(CallExpr, classdef_ctx.reason)
 
             for iface_arg in decor.args:
-                apply_interface(iface_arg, classdef_ctx.cls.info, api, decor)
+                apply_implementer(iface_arg, classdef_ctx.cls.info, api)
 
         if fullname == "zope.interface.declarations.implementer":
             return analyze
@@ -627,6 +659,24 @@ class ZopeInterfacePlugin(Plugin):
                 # Members of subtypes override members of supertype
                 members[name] = base
         return members
+
+    def _apply_interface(self, impl: TypeInfo, iface: TypeInfo) -> None:
+
+        md = self._get_metadata(impl)
+        if "implements" not in md:
+            md["implements"] = []
+
+        md["implements"].append(iface.fullname)
+        self.log(f"Found implementation of " f"{iface.fullname}: {impl.fullname}")
+
+        # Make sure implementation is treated as a subtype of an interface. Pretend
+        # there is a decorator for the class that will create a "type promotion",
+        # but ensure this only gets applied a single time per interface.
+        promote = Instance(iface, [])
+        if not any(ti._promote == promote for ti in impl.mro):
+            faketi = TypeInfo(SymbolTable(), iface.defn, iface.module_name)
+            faketi._promote = promote
+            impl.mro.append(faketi)
 
 
 def plugin(version: str) -> PyType[Plugin]:
