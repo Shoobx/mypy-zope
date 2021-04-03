@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 -------------------
 
 - Support for `classImplements` declarations (#40).
+- Support for `@overload` decorator in interfaces (#46)
 
 
 0.2.13 (2021-03-23)
