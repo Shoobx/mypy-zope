@@ -128,6 +128,42 @@ if IAnimal.providedBy(ob):
 
 ```
 
+### Declaration of overloaded methods in interfaces
+
+Similarly to regular [overloaded
+functions](https://docs.python.org/3/library/typing.html#typing.overload),
+`@overload` declarations are supported in interfaces as well:
+
+```python
+class IAnimal(zope.interface.Interface):
+    @overload
+    def say() -> str:
+        ...
+
+    @overload
+    def say(count: int) -> List[str]:
+        ...
+
+    def say(count: int = None) -> Union[str, List[str]]:
+        pass
+
+
+@zope.interface.implementer(IAnimal)
+class Cow(object):
+    @overload
+    def say(self) -> str:
+        ...
+
+    @overload
+    def say(self, count: int) -> List[str]:
+        ...
+
+    def say(self, count: int = None) -> Union[str, List[str]]:
+        if count is None:
+            return "Mooo"
+        return ["Mooo"] * count
+```
+
 ### Type stubs for zope.interface and zope.schema
 
 `mypy-zope` ships with type stubs (`*.pyi` files) for `zope.interface` and

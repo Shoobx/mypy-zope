@@ -36,6 +36,8 @@ from mypy.nodes import (
     Var,
     Argument,
     FuncDef,
+    OverloadedFuncDef,
+    Decorator,
     CallExpr,
     RefExpr,
     Expression,
@@ -473,10 +475,13 @@ class ZopeInterfacePlugin(Plugin):
             return
 
         for idx, item in enumerate(cls.defs.body):
-            if not isinstance(item, FuncDef):
+            if isinstance(item, FuncDef):
+                replacement = self._adjust_interface_function(api, cls.info, item)
+            elif isinstance(item, OverloadedFuncDef):
+                replacement = self._adjust_interface_overload(api, cls.info, item)
+            else:
                 continue
 
-            replacement = self._adjust_interface_function(api, cls.info, item)
             cls.defs.body[idx] = replacement
 
         md["interface_analyzed"] = True
@@ -516,6 +521,23 @@ class ZopeInterfacePlugin(Plugin):
             func_def.arguments.insert(0, selfarg)
 
         return func_def
+
+    def _adjust_interface_overload(
+        self,
+        api: SemanticAnalyzerPluginInterface,
+        class_info: TypeInfo,
+        overload_def: OverloadedFuncDef,
+    ) -> Statement:
+
+        for overload_item in overload_def.items:
+            if isinstance(overload_item, Decorator):
+                func_def = overload_item.func
+            else:
+                assert isinstance(overload_item, FuncDef)
+                func_def = overload_item
+
+            self._adjust_interface_function(api, class_info, func_def)
+        return overload_def
 
     def _report_implementation_problems(
         self,
