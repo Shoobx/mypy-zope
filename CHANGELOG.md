@@ -2,8 +2,8 @@
 
 All notable changes to this project will be documented in this file.
 
-0.2.14 (unreleased)
--------------------
+0.3.0 (2021-04-04)
+------------------
 
 - Support for `classImplements` declarations (#40).
 - Support for `@overload` decorator in interfaces (#46)
