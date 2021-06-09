@@ -572,7 +572,7 @@ class ZopeInterfacePlugin(Plugin):
 
         if missing:
             for iface_name, members in missing.items():
-                missing_fmt = ", ".join(members)
+                missing_fmt = ", ".join(sorted(members))
                 api.fail(
                     f"'{impl_info.name}' is missing following "
                     f"'{iface_name}' interface members: {missing_fmt}.",

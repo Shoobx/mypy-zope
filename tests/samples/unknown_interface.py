@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
 """
 <output>
-unknown_interface.py:5: error: Cannot find implementation or library stub for module named 'unknown'
-unknown_interface.py:5: note: See https://mypy.readthedocs.io/en/latest/running_mypy.html#missing-imports
+unknown_interface.py:5: error: Cannot find implementation or library stub for module named "unknown"
+unknown_interface.py:5: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
 </output>
 """

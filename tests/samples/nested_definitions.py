@@ -17,6 +17,6 @@ reveal_type(bm)
 
 """
 <output>
-nested_definitions.py:16: note: Revealed type is '__main__.Host.IBookmark'
+nested_definitions.py:16: note: Revealed type is "__main__.Host.IBookmark"
 </output>
 """
