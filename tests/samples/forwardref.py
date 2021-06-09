@@ -20,6 +20,6 @@ class IThing(zope.interface.Interface):
 
 """
 <output>
-forwardref.py:14: note: Revealed type is '__main__.IThing'
+forwardref.py:14: note: Revealed type is "__main__.IThing"
 </output>
 """

@@ -50,7 +50,7 @@ reveal_type(z2.getStuff)
 
 """
 <output>
-overload.py:48: note: Revealed type is 'Overload(def (index: builtins.int) -> builtins.int, def (index: None =) -> builtins.list[builtins.int])'
-overload.py:49: note: Revealed type is 'Overload(def (index: builtins.int) -> builtins.int, def (index: None =) -> builtins.list[builtins.int])'
+overload.py:48: note: Revealed type is "Overload(def (index: builtins.int) -> builtins.int, def (index: None =) -> builtins.list[builtins.int])"
+overload.py:49: note: Revealed type is "Overload(def (index: builtins.int) -> builtins.int, def (index: None =) -> builtins.list[builtins.int])"
 </output>
 """

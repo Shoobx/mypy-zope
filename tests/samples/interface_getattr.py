@@ -12,6 +12,6 @@ def main() -> None:
 
 """
 <output>
-interface_getattr.py:11: note: Revealed type is 'builtins.int'
+interface_getattr.py:11: note: Revealed type is "builtins.int"
 </output>
 """
