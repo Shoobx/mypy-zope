@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 0.3.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Upgrade to Mypy-9.910.
 
 
 0.3.1 (2021-06-11)
