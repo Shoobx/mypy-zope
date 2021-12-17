@@ -1,6 +1,5 @@
-from collections import Iterator
 from contextlib import contextmanager
-from typing import TypeVar, Generic
+from typing import Iterator, TypeVar, Generic
 
 _T = TypeVar("_T")
 
@@ -20,6 +19,6 @@ with m(7) as x:
 
 """
 <output>
-contextmanager.py:17: note: Revealed type is "__main__.A*[builtins.int*]"
+contextmanager.py:16: note: Revealed type is "__main__.A*[builtins.int*]"
 </output>
 """
