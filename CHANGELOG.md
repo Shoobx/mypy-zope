@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-0.3.3 (unreleased)
+0.3.3 (2021-12-17)
 ------------------
 
 - Declare support for Python-3.10.
