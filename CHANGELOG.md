@@ -5,13 +5,14 @@ All notable changes to this project will be documented in this file.
 0.3.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Declare support for Python-3.10.
+- Upgrade to Mypy-0.920.
 
 
 0.3.2 (2021-06-24)
 ------------------
 
-- Upgrade to Mypy-9.910.
+- Upgrade to Mypy-0.910.
 
 
 0.3.1 (2021-06-11)
