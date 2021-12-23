@@ -386,7 +386,7 @@ class ZopeInterfacePlugin(Plugin):
                 arg_kinds=[ARG_POS, ARG_POS, ARG_OPT],
                 arg_names=["self", "obj", "alternate"],
                 ret_type=NoneTyp(),
-                fallback=api.named_type("function"),
+                fallback=api.named_type("builtins.function"),
             )
             newinit = FuncDef("__init__", [], Block([]), init_fn)
             newinit.info = info
