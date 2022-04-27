@@ -19,6 +19,6 @@ with m(7) as x:
 
 """
 <output>
-contextmanager.py:16: note: Revealed type is "__main__.A*[builtins.int*]"
+contextmanager.py:16: note: Revealed type is "__main__.A[builtins.int]"
 </output>
 """
