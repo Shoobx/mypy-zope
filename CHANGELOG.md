@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-0.3.7 (unreleased)
+0.3.7 (2022-04-28)
 ------------------
 
 - Upgrade to Mypy-0.950.
