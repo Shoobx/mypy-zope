@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+0.3.9 (unreleased)
+------------------
+
+- Nothing changed yet.
+
+
 0.3.8 (2022-06-08)
 ------------------
 
