@@ -697,7 +697,7 @@ class ZopeInterfacePlugin(Plugin):
         promote = Instance(iface, [])
         if not any(ti._promote == promote for ti in impl.mro):
             faketi = TypeInfo(SymbolTable(), iface.defn, iface.module_name)
-            faketi._promote = promote
+            faketi._promote = [promote]
             impl.mro.append(faketi)
 
 
