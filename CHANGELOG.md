@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+0.3.11 (unreleased)
+-------------------
+
+- Nothing changed yet.
+
+
 0.3.10 (2022-09-27)
 -------------------
 
