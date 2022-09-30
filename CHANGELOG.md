@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-0.3.11 (unreleased)
+0.3.11 (2022-09-30)
 -------------------
 
 - Fix "Cannot determine consistent method resolution order (MRO)" error after
