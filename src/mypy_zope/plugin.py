@@ -16,7 +16,7 @@ from mypy.types import (
 )
 from mypy.checker import TypeChecker, is_false_literal
 from mypy.options import Options
-from mypy.nodes import TypeInfo
+from mypy.nodes import TypeInfo, IS_ABSTRACT
 from mypy.plugin import (
     CheckerPluginInterface,
     SemanticAnalyzerPluginInterface,
@@ -519,6 +519,10 @@ class ZopeInterfacePlugin(Plugin):
             func_def.arg_names.insert(0, "self")
             func_def.arg_kinds.insert(0, ARG_POS)
             func_def.arguments.insert(0, selfarg)
+
+            # All interface methods are abstract by definition. This
+            # suppresses "empty-body" errors.
+            func_def.abstract_status = IS_ABSTRACT
 
         return func_def
 
