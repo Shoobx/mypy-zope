@@ -59,10 +59,10 @@ def test_mro_computation_in_forward_reference_to_implementer(mypy_cache_dir: str
     mro: List[TypeInfo] = node.node.mro
     # Expected: [
     #   <TypeInfo forward_reference_to_implementer.Protocol@21>,
-    #   <TypeInfo builtins.object>,
     #   <TypeInfo forward_reference_to_implementer.IProtocol>,
+    #   <TypeInfo builtins.object>,
     # ]
     assert len(mro) == 3
     assert mro[0].fullname.startswith(f"{sample_name}.Protocol")
-    assert mro[1].fullname == "builtins.object"
-    assert mro[2].fullname == f"{sample_name}.IProtocol"
+    assert mro[1].fullname == f"{sample_name}.IProtocol"
+    assert mro[2].fullname == "builtins.object"

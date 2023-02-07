@@ -698,7 +698,9 @@ class ZopeInterfacePlugin(Plugin):
         if not any(promote in ti._promote for ti in impl.mro):
             faketi = TypeInfo(SymbolTable(), iface.defn, iface.module_name)
             faketi._promote = [promote]
-            impl.mro.append(faketi)
+            faketi.metaclass_type = iface.metaclass_type
+            # Insert the TypeInfo before the builtins.object that's at the end.
+            impl.mro.insert(len(impl.mro) - 1, faketi)
 
 
 def plugin(version: str) -> PyType[Plugin]:
