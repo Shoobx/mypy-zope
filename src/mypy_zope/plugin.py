@@ -482,6 +482,9 @@ class ZopeInterfacePlugin(Plugin):
                 replacement = self._adjust_interface_function(api, cls.info, item)
             elif isinstance(item, OverloadedFuncDef):
                 replacement = self._adjust_interface_overload(api, cls.info, item)
+            elif isinstance(item, Decorator):
+                replacement = item
+                replacement.func = self._adjust_interface_function(api, cls.info, item.func)
             else:
                 continue
 
