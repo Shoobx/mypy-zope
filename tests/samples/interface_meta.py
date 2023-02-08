@@ -7,7 +7,7 @@ T = TypeVar('T', bound='zope.interface.Interface')
 class IBookmark(zope.interface.Interface):
     @staticmethod
     def create(url: str) -> 'IBookmark':
-        pass
+        return IBookmark(url)
 
 def createOb(iface: Type[T]) -> T:
     if zope.interface.interfaces.IInterface.providedBy(iface):
