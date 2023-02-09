@@ -700,6 +700,7 @@ class ZopeInterfacePlugin(Plugin):
             faketi._promote = [promote]
             faketi.metaclass_type = iface.metaclass_type
             # Insert the TypeInfo before the builtins.object that's at the end.
+            assert impl.mro[-1].fullname == 'builtins.object'
             impl.mro.insert(len(impl.mro) - 1, faketi)
 
 
