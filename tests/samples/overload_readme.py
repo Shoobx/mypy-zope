@@ -14,7 +14,7 @@ class IAnimal(zope.interface.Interface):
     def say(count: int) -> List[str]:
         ...
 
-    def say(count: int = None) -> Union[str, List[str]]:
+    def say(count: Optional[int] = None) -> Union[str, List[str]]:
         pass
 
 
@@ -28,7 +28,7 @@ class Cow(object):
     def say(self, count: int) -> List[str]:
         ...
 
-    def say(self, count: int = None) -> Union[str, List[str]]:
+    def say(self, count: Optional[int] = None) -> Union[str, List[str]]:
         if count is None:
             return "Mooo"
         return ["Mooo"] * count

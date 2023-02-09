@@ -9,7 +9,7 @@ class A(Generic[_T]):
 
 @contextmanager
 def m(x: _T) -> Iterator[A[_T]]:
-    ...
+    return iter([A()])
 
 
 with m(7) as x:

@@ -96,6 +96,9 @@ SIMPLE_FIELD_TO_TYPE = {
 }
 
 
+HACK_IS_ABSTRACT_NON_PROPAGATING = -12345678
+
+
 class ZopeInterfacePlugin(Plugin):
     def __init__(self, options: Options):
         super().__init__(options)
@@ -519,6 +522,27 @@ class ZopeInterfacePlugin(Plugin):
             func_def.arg_names.insert(0, "self")
             func_def.arg_kinds.insert(0, ARG_POS)
             func_def.arguments.insert(0, selfarg)
+
+        # 1: We want mypy to consider this method abstract, so that it allows the
+        #    method to have an empty body without causing a warning.
+        # 2: We want mypy to consider the interface class NOT abstract, so we can use the
+        #   "adaption" pattern.
+        # Unfortunately whenever mypy sees (1) it will mark the class as abstract,
+        # forcing (2) to be false. This seems to be a change in mypy 0.990, namely
+        #    https://github.com/python/mypy/pull/13729
+        #
+        # Mypy 1.0.0:
+        # - allows empty bodies for abstract methods in mypy/checker.py:1240
+        #   by testing if
+        #       abstract_status != NOT_ABSTRACT.
+        # - marks classes as abstract based on their methods in
+        #   mypy/semanal_classprop.py:79 by testing if
+        #       abstract_status in (IS_ABSTRACT, IMPLICITLY_ABSTRACT)
+        #
+        # Thus we can make (1) and (2) true by setting abstract_status to some value
+        # distinct from these three NOT_ABSTRACT, IS_ABSTRACT and IMPLICITLY_ABSTRACT.
+        # These are presently the integers 0, 1, and 2 defined in mypy/nodes.py:738-743.
+        func_def.abstract_status = HACK_IS_ABSTRACT_NON_PROPAGATING
 
         return func_def
 

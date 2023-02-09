@@ -5,9 +5,7 @@ T = TypeVar('T', bound='zope.interface.Interface')
 
 
 class IBookmark(zope.interface.Interface):
-    @staticmethod
-    def create(url: str) -> 'IBookmark':
-        pass
+    pass
 
 def createOb(iface: Type[T]) -> T:
     if zope.interface.interfaces.IInterface.providedBy(iface):
@@ -20,6 +18,6 @@ def main(self) -> None:
 
 """
 <output>
-interface_meta.py:19: note: Revealed type is "__main__.IBookmark"
+interface_meta.py:17: note: Revealed type is "__main__.IBookmark"
 </output>
 """
