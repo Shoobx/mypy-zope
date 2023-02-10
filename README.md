@@ -180,9 +180,9 @@ These `zope.interface` features are not supported:
 * Stub files are largely incomplete
 * Interface compatibility checker will not type-check non-method attributes
 
-## Under development!
+## Ready to use!
 
-Currently the project is in a very early stage of development and
-might not be practically usable yet. Suggestions and pull requests are
-welcomed!
+Currently, the project is used in production in various substantially large
+projects and considered production-grade, however there still might be subtle
+bugs around. Suggestions and pull requests are welcomed!
 
