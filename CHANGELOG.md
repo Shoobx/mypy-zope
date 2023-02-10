@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 0.3.12 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Upgrade to Mypy-1.0.0 (#89)
+- Fix caching error (Metaclass conflict) (#86) 
 
 
 0.3.11 (2022-09-30)
