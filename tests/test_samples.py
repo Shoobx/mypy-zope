@@ -26,6 +26,7 @@ def test_samples(samplefile, mypy_cache_dir):
     opts.show_traceback = True
     opts.namespace_packages = True
     opts.hide_error_codes = True
+    opts.warn_unreachable = True
     opts.plugins = ['mypy_zope:plugin']
     # Config file is needed to load plugins, it doesn't not exist and is not
     # supposed to.
