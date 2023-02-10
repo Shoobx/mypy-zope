@@ -719,13 +719,8 @@ class ZopeInterfacePlugin(Plugin):
         # there is a decorator for the class that will create a "type promotion",
         # but ensure this only gets applied a single time per interface.
         promote = Instance(iface, [])
-        if not any(promote in ti._promote for ti in impl.mro):
-            faketi = TypeInfo(SymbolTable(), iface.defn, iface.module_name)
-            faketi._promote = [promote]
-            faketi.metaclass_type = iface.metaclass_type
-            # Insert the TypeInfo before the builtins.object that's at the end.
-            assert impl.mro[-1].fullname == 'builtins.object'
-            impl.mro.insert(len(impl.mro) - 1, faketi)
+        if promote not in impl._promote:
+            impl._promote.append(promote)
 
 
 def plugin(version: str) -> PyType[Plugin]:
