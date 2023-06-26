@@ -27,6 +27,7 @@ def test_samples(samplefile, mypy_cache_dir):
     opts.namespace_packages = True
     opts.hide_error_codes = True
     opts.plugins = ['mypy_zope:plugin']
+    opts.python_version = (3, 11)
     # Config file is needed to load plugins, it doesn't not exist and is not
     # supposed to.
     opts.config_file = '    not_existing_config.ini'

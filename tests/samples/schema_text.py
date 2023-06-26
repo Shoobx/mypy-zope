@@ -40,9 +40,9 @@ if __name__ == '__main__':
 
 """
 <output>
-schema_text.py:33: error: Incompatible types in assignment (expression has type "int", variable has type "Optional[str]")
+schema_text.py:33: error: Incompatible types in assignment (expression has type "int", variable has type "str | None")
 schema_text.py:34: error: Incompatible types in assignment (expression has type "None", variable has type "str")
 schema_text.py:35: error: Incompatible types in assignment (expression has type "None", variable has type "str")
-schema_text.py:36: error: Incompatible types in assignment (expression has type "bool", variable has type "Optional[str]")
+schema_text.py:36: error: Incompatible types in assignment (expression has type "bool", variable has type "str | None")
 </output>
 """

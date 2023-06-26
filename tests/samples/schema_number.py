@@ -34,9 +34,9 @@ if __name__ == '__main__':
 
 """
 <output>
-schema_number.py:20: error: Incompatible types in assignment (expression has type "str", variable has type "Optional[complex]")
-schema_number.py:24: error: Incompatible types in assignment (expression has type "complex", variable has type "Optional[float]")
-schema_number.py:27: error: Incompatible types in assignment (expression has type "complex", variable has type "Optional[int]")
-schema_number.py:28: error: Incompatible types in assignment (expression has type "float", variable has type "Optional[int]")
+schema_number.py:20: error: Incompatible types in assignment (expression has type "str", variable has type "complex | None")
+schema_number.py:24: error: Incompatible types in assignment (expression has type "complex", variable has type "float | None")
+schema_number.py:27: error: Incompatible types in assignment (expression has type "complex", variable has type "int | None")
+schema_number.py:28: error: Incompatible types in assignment (expression has type "float", variable has type "int | None")
 </output>
 """
