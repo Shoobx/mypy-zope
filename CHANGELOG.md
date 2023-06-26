@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-0.9.2 (unreleased)
+## 1.0.0 (2023-06-26)
 ------------------
 
 - Support mypy up to 1.5.0
