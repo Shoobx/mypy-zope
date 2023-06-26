@@ -20,6 +20,6 @@ if __name__ == '__main__':
 
 """
 <output>
-schema_bool.py:14: error: Incompatible types in assignment (expression has type "int", variable has type "Optional[bool]")
+schema_bool.py:14: error: Incompatible types in assignment (expression has type "int", variable has type "bool | None")
 </output>
 """
