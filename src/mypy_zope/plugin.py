@@ -496,7 +496,7 @@ class ZopeInterfacePlugin(Plugin):
 
     def _is_interface(self, typeinfo: TypeInfo) -> bool:
         md = self._get_metadata(typeinfo)
-        return md.get("is_interface", False)
+        return cast(bool, md.get("is_interface", False))
 
     def _adjust_interface_function(
         self,
