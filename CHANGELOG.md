@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 1.0.4 (unreleased)
+## 1.0.4 (2024-03-12)
 ---------------------
 
 - Drop support for python-3.7 (follow mypy). 
