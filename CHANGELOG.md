@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## 1.0.4 (unreleased)
 ---------------------
 
+- Drop support for python-3.7 (follow mypy). 
 - Support for mypy up to 1.9.x
 
 
