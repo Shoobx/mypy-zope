@@ -23,7 +23,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install --upgrade -e .[test]
-        pip install coveralls
     - name: Test with pytest
       run: |
         pytest --junit-xml var/test-results/results.xml -v --cov src/mypy_zope --cov-report=term
@@ -37,6 +36,7 @@ jobs:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN}}
         COVERALLS_PARALLEL: true
       run: |
+        pip install coveralls
         coveralls --service=github
 
   report:
