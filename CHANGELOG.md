@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 1.0.9 (unreleased)
+## 1.0.9 (2024-11-04)
 ---------------------
 
 - Support mypy-1.13
