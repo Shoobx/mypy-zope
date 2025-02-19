@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 1.0.11 (unreleased)
+## 1.0.11 (2025-02-19)
 ----------------------
 
 - Support mypy-1.15
