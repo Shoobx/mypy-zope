@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.13 (unreleased)
+----------------------
+
+- Nothing changed yet.
+
+
 ## 1.0.12 (2025-06-03)
 ----------------------
 
