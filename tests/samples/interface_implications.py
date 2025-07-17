@@ -35,9 +35,9 @@ if __name__ == '__main__':
 <output>
 interface_implications.py:19: note: Revealed type is "None"
 interface_implications.py:21: note: Revealed type is "__main__.IBookmark"
-interface_implications.py:22: note: Revealed type is "Union[__main__.IBookmark, None]"
+interface_implications.py:22: note: Revealed type is "__main__.IBookmark | None"
 interface_implications.py:26: note: Revealed type is "type[__main__.IBookmark]"
 interface_implications.py:28: note: Revealed type is "type[None]"
-interface_implications.py:29: note: Revealed type is "Union[type[__main__.IBookmark], type[None]]"
+interface_implications.py:29: note: Revealed type is "type[__main__.IBookmark] | type[None]"
  </output>
 """
