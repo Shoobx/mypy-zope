@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ----------------------
 
 - Drop support for python-3.8 (follow mypy). 
+- Support mypy-1.17
 
 
 ## 1.0.12 (2025-06-03)
