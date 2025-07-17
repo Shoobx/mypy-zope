@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 1.0.13 (unreleased)
+## 1.0.13 (2025-07-17)
 ----------------------
 
 - Drop support for python-3.8 (follow mypy). 
