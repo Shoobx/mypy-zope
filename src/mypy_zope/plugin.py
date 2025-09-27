@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Callable, Optional, Tuple, Sequence, Union
 from typing import Type as PyType
 from typing import cast
 
+from mypy.typestate import type_state
 from mypy.types import (
     Type,
     Instance,
@@ -721,6 +722,13 @@ class ZopeInterfacePlugin(Plugin):
         promote = Instance(iface, [])
         if promote not in impl._promote:
             impl._promote.append(promote)
+
+        # Remember implementation as a subtype of an interface. HACK: we are
+        # writing to a global variable here, so potentially this might be a
+        # memory leak. Needs testing with a large codebase.
+        asmpt = (Instance(impl, []), promote)
+        type_state.get_assumptions(False).append(asmpt)
+        type_state.get_assumptions(True).append(asmpt)
 
 
 def plugin(version: str) -> PyType[Plugin]:
