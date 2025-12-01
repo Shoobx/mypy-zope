@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## 1.0.14 (unreleased)
 ----------------------
 
+- Support mypy-1.19
 - Support mypy-1.18
 
 
