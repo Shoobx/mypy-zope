@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 1.0.15 (unreleased)
+## 1.0.15 (2026-05-18)
 ----------------------
 
 - Drop support for python-3.9 (follow mypy).
