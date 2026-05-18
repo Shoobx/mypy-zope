@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 - Drop support for python-3.9 (follow mypy).
 - Add support for python-3.14
+- Support mypy-2.1
 
 
 ## 1.0.14 (2025-12-01)
