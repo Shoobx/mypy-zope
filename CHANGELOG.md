@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.16 (unreleased)
+----------------------
+
+- Nothing changed yet.
+
+
 ## 1.0.15 (2026-05-18)
 ----------------------
 
