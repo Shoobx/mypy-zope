@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 1.0.16 (unreleased)
+## 1.0.16 (2026-07-15)
 ----------------------
 
 - Bump github actions to use node 24
