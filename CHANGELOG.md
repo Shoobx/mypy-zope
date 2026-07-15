@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ----------------------
 
 - Bump github actions to use node 24
+- Support mypy-2.3
 
 
 ## 1.0.15 (2026-05-18)
