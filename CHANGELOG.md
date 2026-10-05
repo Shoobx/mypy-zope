@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## 1.0.17 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Support mypy-2.4
 
 
 ## 1.0.16 (2026-07-15)
